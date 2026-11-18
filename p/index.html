@@ -45,7 +45,8 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
 (() => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   // Two link forms: short "#<equipment-id>" (simple QR) or "#g=<id>&a=<asset ID>&n=<name>".
-  const KNOWN = { '84911992-8066-4d37-995e-dbbf576f6942': ['AVS/DXB/SD/101', 'Reception Area'] };
+  const KNOWN = { '84911992-8066-4d37-995e-dbbf576f6942': ['AVS/DXB/SD/101', 'Sliding Door – Reception Area',
+    { engineer: 'Wasil Muhammed', engineerPhone: '+971 50 982 1844', technician: 'Prajith M', technicianPhone: '+971 55 352 5332' }] };
   const h = location.hash.slice(1);
   const p = new URLSearchParams(h.includes('=') ? h : '');
   let guid = (p.get('g') || (h.includes('=') ? '' : h)).toLowerCase();
@@ -73,6 +74,7 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
     if (st) { const own = (st.sites || {})['55'] || {}, g = (own.group && (st.groups || {})[own.group]) || {}, d = st.default || {};
       c = {}; for (const k of ['engineer', 'engineerPhone', 'technician', 'technicianPhone']) c[k] = own[k] || g[k] || d[k] || ''; }
   } catch {}
+  if (known[2]) c = known[2];          // contacts set for this asset take priority
   const wa = raw => { let d = String(raw).replace(/[^\d+]/g, '');
     if (d.startsWith('+')) d = d.slice(1); else if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '971' + d.slice(1); else if (!d.startsWith('971') && d.length <= 9) d = '971' + d;
     return d.length >= 8 ? d : ''; };

@@ -44,9 +44,13 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
 <script>
 (() => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const p = new URLSearchParams(location.hash.slice(1));
-  const guid = (p.get('g') || '').toLowerCase();
-  const asset = p.get('a') || '', name = p.get('n') || '';
+  // Two link forms: short "#<equipment-id>" (simple QR) or "#g=<id>&a=<asset ID>&n=<name>".
+  const KNOWN = { '84911992-8066-4d37-995e-dbbf576f6942': ['AVS/DXB/SD/101', 'Reception Area'] };
+  const h = location.hash.slice(1);
+  const p = new URLSearchParams(h.includes('=') ? h : '');
+  const guid = (p.get('g') || (h.includes('=') ? '' : h)).toLowerCase();
+  const known = KNOWN[guid] || [];
+  const asset = p.get('a') || known[0] || '', name = p.get('n') || known[1] || '';
   const app = document.getElementById('app');
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(guid)) {
     app.innerHTML = '<div class="card"><h1>Label not recognised</h1><p class="muted" style="font-size:15px">This QR code does not point to an AVS asset. Please call us and quote the asset ID printed on the label.</p></div>';

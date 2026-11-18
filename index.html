@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AVS Asset Page – Demo</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--ink:#12263a;--muted:#4a5866;--line:#d5dde3;--primary:#1b5e78;--accent:#4bacc6;--ok:#15803d;--warn:#a15c07;--wa:#0b7a3e}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#f4f7f9;line-height:1.5;font-size:16px}
+header{background:#fff;border-bottom:3px solid var(--primary)}
+.w{max-width:640px;margin:0 auto;padding:0 16px}
+header .w{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:10px}
+.co b{display:block;font-size:16px;line-height:1.3}.co span{font-size:13px;color:var(--muted)}
+main{padding:16px 0 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+h1{font-size:21px;margin:0 0 2px;line-height:1.25}
+h2{font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em;color:var(--primary)}
+.id{font-size:15px;margin:0}.id b{font-size:17px;letter-spacing:.02em}
+.muted{color:var(--muted);font-size:14px;margin:2px 0 0}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;margin-top:10px}
+.badge.ok{background:#e7f4ec;color:var(--ok)}.badge.due{background:#fdf1e2;color:var(--warn)}
+dl{margin:0;display:grid;grid-template-columns:minmax(110px,38%) 1fr;gap:8px 12px}
+dt{color:var(--muted);font-size:14px}dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.row{padding:10px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0;padding-top:0}
+.row .n{font-size:14px;color:var(--muted)}.row .v{font-weight:600;overflow-wrap:anywhere}
+.btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+a.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:96px;padding:8px 14px;border-radius:8px;border:1.5px solid var(--primary);color:var(--primary);text-decoration:none;font-weight:700;font-size:15px}
+a.btn.wa{border-color:var(--wa);color:var(--wa)}
+a.btn.primary{background:var(--primary);color:#fff;width:100%}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+ul{list-style:none;margin:0;padding:0}
+li{padding:10px 0;border-top:1px solid var(--line)}li:first-child{border-top:0;padding-top:0}
+li .d{font-weight:700}li .s{font-size:14px;color:var(--muted)}
+.empty{color:var(--muted);margin:0}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
+
+.page{display:none}.page:target{display:block}
+body:has(.page:target) #home{display:none}
+.demo{background:#12263a;color:#fff;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px}
+.demo a{color:#fff;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.acard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink);text-align:center}
+.acard:hover{border-color:var(--primary)}
+.acard .tag{width:189px;height:auto;max-width:100%;image-rendering:auto;margin-bottom:6px}
+.acard .an{font-weight:700;line-height:1.3}.acard .ai{font-size:14px;color:var(--muted)}
+.st{font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px}.st.ok{background:#e7f4ec;color:var(--ok)}.st.due{background:#fdf1e2;color:var(--warn)}
+.checks li{border:0;padding:4px 0 4px 0;font-size:15px}
+
+.wide{max-width:900px}
+.pbtn{font:inherit;font-weight:700;min-height:44px;padding:8px 18px;border-radius:8px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;cursor:pointer}
+.pbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.prow{display:flex;gap:20px;align-items:center;padding:14px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.prow:first-of-type{border-top:0}
+.tag.big{width:min(100%,480px);height:auto}
+.tag.actual{width:50mm;height:25mm}
+.pside{display:flex;flex-direction:column;gap:4px}.pside span{color:var(--muted);font-size:14px}.pact{margin-top:8px}
+.ponly{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  .noprint,#home,header,footer,.demo{display:none !important}
+  .page{display:none !important}#tags{display:block !important}
+  .ponly{display:block}
+  .card{border:0;padding:0}
+  .tag.big{width:130mm;height:65mm}
+  .prow{break-inside:avoid}
+}
+</style></head><body>
+
+<section id="home">
+<header><div class="w"><img src="data:image/png;base64,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" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset page · demo</span></div></div></header>
+<main class="w">
+  <div class="card">
+    <h1>Asset tag demo</h1>
+    <p class="muted" style="font-size:15px">Scan a tag below with your phone camera, or tap it, to open the page a client sees. No login needed. These pages are built by the same code as the live system, with <b>sample data</b>. In the live system the QR code opens <b>asset.avssgroup.com/&lt;equipment ID&gt;</b> and every detail comes from Synchroteam.</p>
+  </div>
+  <div class="grid3">
+<a class="acard" href="#avs-elv-000142">
+  <canvas class="tag" data-hash="avs-elv-000142" data-asset="AVS-ELV-000142" width="1134" height="564" role="img" aria-label="Asset tag AVS-ELV-000142"></canvas>
+  <span class="an">CCTV Camera – Main Lobby</span>
+  <span class="ai">AVS-ELV-000142</span>
+  <span class="st ok">PPM up to date</span>
+</a>
+<a class="acard" href="#avs-adr-000318">
+  <canvas class="tag" data-hash="avs-adr-000318" data-asset="AVS-ADR-000318" width="1134" height="564" role="img" aria-label="Asset tag AVS-ADR-000318"></canvas>
+  <span class="an">Automatic Sliding Door – Main Entrance</span>
+  <span class="ai">AVS-ADR-000318</span>
+  <span class="st due">PPM due</span>
+</a>
+<a class="acard" href="#avs-elv-000207">
+  <canvas class="tag" data-hash="avs-elv-000207" data-asset="AVS-ELV-000207" width="1134" height="564" role="img" aria-label="Asset tag AVS-ELV-000207"></canvas>
+  <span class="an">Access Control Reader – Level 1</span>
+  <span class="ai">AVS-ELV-000207</span>
+  <span class="st due">New asset, no PPM yet</span>
+</a></div>
+  <div class="card">
+    <h2>What to check</h2>
+    <ul class="checks">
+      <li><b>AVS-ELV-000142</b>: up to date. Last PPM date, time and technician, Call and WhatsApp buttons, PPM history. The repair job on this asset is hidden.</li>
+      <li><b>AVS-ADR-000318</b>: PPM overdue, shown with an amber “PPM due” badge.</li>
+      <li><b>AVS-ELV-000207</b>: new asset with no PPM recorded yet.</li>
+      <li><a href="#tags">Printable tags</a>: print the three demo tags to scan from paper.</li>
+      <li><a href="#not-found">Unknown tag</a>: what someone sees if a tag's asset was removed from Synchroteam.</li>
+    </ul>
+  </div>
+</main>
+<footer>Demo for verification · sample names and numbers are invented</footer>
+</section><section class="page" id="tags"><div class="demo noprint"><span><b>DEMO</b> · printable tags</span><a href="#home">All demo assets</a></div>
+<main class="w wide">
+  <div class="card noprint"><h1>Print the demo tags</h1>
+  <p class="muted" style="font-size:15px">Print at 100% scale (no “fit to page”). Scan an enlarged tag with a phone to open its demo page; the small ones show the real 50 × 25 mm size.</p>
+  <div class="btns"><button type="button" class="pbtn" onclick="print()">Print tags</button></div></div>
+  <div class="card ptags"><h2 class="ponly">AVS asset tags: demo</h2>
+  <div class="prow">
+    <canvas class="tag big" data-hash="avs-elv-000142" data-asset="AVS-ELV-000142" width="1134" height="564" role="img" aria-label="Enlarged asset tag AVS-ELV-000142"></canvas>
+    <div class="pside"><b>CCTV Camera – Main Lobby</b><span>AVS-ELV-000142</span><span class="pact">Actual size (50 × 25 mm):</span>
+    <canvas class="tag actual" data-hash="avs-elv-000142" data-asset="AVS-ELV-000142" width="1134" height="564" role="img" aria-label="Actual-size asset tag AVS-ELV-000142"></canvas></div>
+  </div>
+  <div class="prow">
+    <canvas class="tag big" data-hash="avs-adr-000318" data-asset="AVS-ADR-000318" width="1134" height="564" role="img" aria-label="Enlarged asset tag AVS-ADR-000318"></canvas>
+    <div class="pside"><b>Automatic Sliding Door – Main Entrance</b><span>AVS-ADR-000318</span><span class="pact">Actual size (50 × 25 mm):</span>
+    <canvas class="tag actual" data-hash="avs-adr-000318" data-asset="AVS-ADR-000318" width="1134" height="564" role="img" aria-label="Actual-size asset tag AVS-ADR-000318"></canvas></div>
+  </div>
+  <div class="prow">
+    <canvas class="tag big" data-hash="avs-elv-000207" data-asset="AVS-ELV-000207" width="1134" height="564" role="img" aria-label="Enlarged asset tag AVS-ELV-000207"></canvas>
+    <div class="pside"><b>Access Control Reader – Level 1</b><span>AVS-ELV-000207</span><span class="pact">Actual size (50 × 25 mm):</span>
+    <canvas class="tag actual" data-hash="avs-elv-000207" data-asset="AVS-ELV-000207" width="1134" height="564" role="img" aria-label="Actual-size asset tag AVS-ELV-000207"></canvas></div>
+  </div>
+  <p class="muted ponly">Sample data. Scan to open the demo asset page.</p></div>
+</main></section><section class="page" id="avs-elv-000142"><div class="demo"><span><b>DEMO</b> · sample data</span><a href="#home">All demo assets</a></div>
+<header><div class="w"><img src="data:image/png;base64,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" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
+<main class="w">
+<div class="card">
+  <h1>CCTV Camera – Main Lobby</h1>
+  <p class="id">Asset ID <b>AVS-ELV-000142</b></p>
+  <span class="badge ok">✓ PPM up to date</span>
+  <dl style="margin-top:14px">
+    <dt>Site</dt><dd>Sample Business Tower</dd>
+    <dt>Address</dt><dd>Sample Street 12, Al Qusais, Dubai</dd>
+    <dt>Customer</dt><dd>Sample Customer LLC</dd>
+    <dt>Next PPM</dt><dd>Thu, 07 Jan 2027</dd>
+  </dl>
+</div>
+<div class="card">
+  <h2>Last PPM</h2>
+  <dl>
+    <dt>Date</dt><dd>Fri, 09 Oct 2026</dd>
+    <dt>Time</dt><dd>09:15 AM – 10:20 AM <span class="muted">(1 h 5 min)</span></dd>
+    <dt>Done by</dt><dd>Technician A</dd>
+    <dt>Job no.</dt><dd>5012</dd>
+  </dl>
+  <div class="btns"><a class="btn" href="tel:+971500000003">Call</a><a class="btn wa" href="https://wa.me/971500000003?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div>
+  
+</div><div class="card"><h2>Details &amp; contacts</h2><div class="row"><div class="n">Model</div><div class="v">Sample IP Dome 4MP</div></div><div class="row"><div class="n">Cluster Engineer</div><div class="v">Sample Engineer</div></div><div class="row"><div class="n">Cluster Engineer Phone</div><div class="v">050 000 0001</div><div class="btns"><a class="btn" href="tel:+971500000001">Call</a><a class="btn wa" href="https://wa.me/971500000001?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Technician Phone</div><div class="v">050 000 0002</div><div class="btns"><a class="btn" href="tel:+971500000002">Call</a><a class="btn wa" href="https://wa.me/971500000002?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Account Manager</div><div class="v">Sample Manager</div></div></div><div class="card"><h2>PPM history</h2><ul><li><div class="d">Fri, 09 Oct 2026</div><div class="s">09:15 AM – 10:20 AM · Technician A · Job 5012</div></li><li><div class="d">Fri, 10 Jul 2026</div><div class="s">12:00 PM – 01:05 PM · Technician B · Job 4630</div></li><li><div class="d">Fri, 10 Apr 2026</div><div class="s">11:30 AM – 12:25 PM · Technician A · Job 4211</div></li></ul></div>
+<div class="card"><h2>AVS office</h2>
+<a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a>
+<p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>
+</main>
+<footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
+</section><section class="page" id="avs-adr-000318"><div class="demo"><span><b>DEMO</b> · sample data</span><a href="#home">All demo assets</a></div>
+<header><div class="w"><img src="data:image/png;base64,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" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
+<main class="w">
+<div class="card">
+  <h1>Automatic Sliding Door – Main Entrance</h1>
+  <p class="id">Asset ID <b>AVS-ADR-000318</b></p>
+  <span class="badge due">● PPM due</span>
+  <dl style="margin-top:14px">
+    <dt>Site</dt><dd>Sample Business Tower</dd>
+    <dt>Address</dt><dd>Sample Street 12, Al Qusais, Dubai</dd>
+    <dt>Customer</dt><dd>Sample Customer LLC</dd>
+    <dt>Next PPM</dt><dd>To be scheduled</dd>
+  </dl>
+</div>
+<div class="card">
+  <h2>Last PPM</h2>
+  <dl>
+    <dt>Date</dt><dd>Mon, 13 Jul 2026</dd>
+    <dt>Time</dt><dd>10:10 AM – 11:40 AM <span class="muted">(1 h 30 min)</span></dd>
+    <dt>Done by</dt><dd>Technician B</dd>
+    <dt>Job no.</dt><dd>4588</dd>
+  </dl>
+  <div class="btns"><a class="btn" href="tel:+971500000004">Call</a><a class="btn wa" href="https://wa.me/971500000004?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div>
+  
+</div><div class="card"><h2>Details &amp; contacts</h2><div class="row"><div class="n">Model</div><div class="v">Sample Sliding Operator</div></div><div class="row"><div class="n">Cluster Engineer</div><div class="v">Sample Engineer</div></div><div class="row"><div class="n">Cluster Engineer Phone</div><div class="v">050 000 0001</div><div class="btns"><a class="btn" href="tel:+971500000001">Call</a><a class="btn wa" href="https://wa.me/971500000001?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Technician Phone</div><div class="v">050 000 0002</div><div class="btns"><a class="btn" href="tel:+971500000002">Call</a><a class="btn wa" href="https://wa.me/971500000002?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Account Manager</div><div class="v">Sample Manager</div></div></div><div class="card"><h2>PPM history</h2><ul><li><div class="d">Mon, 13 Jul 2026</div><div class="s">10:10 AM – 11:40 AM · Technician B · Job 4588</div></li><li><div class="d">Mon, 13 Apr 2026</div><div class="s">01:00 PM – 02:30 PM · Technician B · Job 4102</div></li></ul></div>
+<div class="card"><h2>AVS office</h2>
+<a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a>
+<p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>
+</main>
+<footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
+</section><section class="page" id="avs-elv-000207"><div class="demo"><span><b>DEMO</b> · sample data</span><a href="#home">All demo assets</a></div>
+<header><div class="w"><img src="data:image/png;base64,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" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
+<main class="w">
+<div class="card">
+  <h1>Access Control Reader – Level 1</h1>
+  <p class="id">Asset ID <b>AVS-ELV-000207</b></p>
+  <span class="badge due">● No PPM recorded yet</span>
+  <dl style="margin-top:14px">
+    <dt>Site</dt><dd>Sample Business Tower</dd>
+    <dt>Address</dt><dd>Sample Street 12, Al Qusais, Dubai</dd>
+    <dt>Customer</dt><dd>Sample Customer LLC</dd>
+    <dt>Next PPM</dt><dd>To be scheduled</dd>
+  </dl>
+</div><div class="card"><h2>Last PPM</h2><p class="empty">No PPM visit recorded yet.</p></div><div class="card"><h2>Details &amp; contacts</h2><div class="row"><div class="n">Cluster Engineer</div><div class="v">Sample Engineer</div></div><div class="row"><div class="n">Cluster Engineer Phone</div><div class="v">050 000 0001</div><div class="btns"><a class="btn" href="tel:+971500000001">Call</a><a class="btn wa" href="https://wa.me/971500000001?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Technician Phone</div><div class="v">050 000 0002</div><div class="btns"><a class="btn" href="tel:+971500000002">Call</a><a class="btn wa" href="https://wa.me/971500000002?text=Hello%20AVS%2C%20regarding%20asset" rel="noopener noreferrer">WhatsApp</a></div></div><div class="row"><div class="n">Account Manager</div><div class="v">Sample Manager</div></div></div><div class="card"><h2>PPM history</h2><p class="empty">No PPM visits recorded yet.</p></div>
+<div class="card"><h2>AVS office</h2>
+<a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a>
+<p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>
+</main>
+<footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
+</section><section class="page" id="not-found"><div class="demo"><span><b>DEMO</b> · sample data</span><a href="#home">All demo assets</a></div>
+<header><div class="w"><img src="data:image/png;base64,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" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
+<main class="w"><div class="card"><h1>Asset not found</h1><p class="muted" style="font-size:15px">We could not find this asset in our records. It may have been replaced or removed. Please call us and quote the asset ID printed on the label.</p></div>
+<div class="card"><h2>AVS office</h2>
+<a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a>
+<p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>
+</main>
+<footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
+</section>
+<script>
+  // Open each demo page at the top, and keep the address in step when tapping between pages.
+  addEventListener('hashchange', () => scrollTo(0, 0));
+</script>
+
+<script src="assets/qrcode.js"></script>
+<script>
+(() => {
+  const M = {"qr": {"x": 8, "y": 8, "w": 78, "h": 78}, "asset": {"x": 92, "y": 53.3125, "w": 89, "h": 15.390625, "fs": 14}, "w": 189, "h": 94};
+  const tpl = new Image();
+  tpl.onload = () => document.querySelectorAll('canvas.tag').forEach(draw);
+  tpl.src = 'assets/tag-template.jpg';
+  function draw(cv) {
+    const S = cv.width / M.w, c = cv.getContext('2d');
+    c.drawImage(tpl, 0, 0, cv.width, cv.height);
+    // QR: this site's own address + the asset's page, so the demo works wherever it is hosted
+    const url = location.origin + location.pathname + '#' + cv.dataset.hash;
+    const q = qrcode(0, 'M'); q.addData(url); q.make();
+    const n = q.getModuleCount() + 2, b = M.qr, u = b.w * S / n;
+    c.fillStyle = '#fff'; c.fillRect(b.x * S, b.y * S, b.w * S, b.h * S);
+    c.fillStyle = '#000';
+    for (let r = 0; r < n - 2; r++) for (let k = 0; k < n - 2; k++)
+      if (q.isDark(r, k)) c.fillRect(b.x * S + (k + 1) * u, b.y * S + (r + 1) * u, u + 0.6, u + 0.6);
+    const f = M.asset; let size = f.fs * S;
+    const font = () => `700 ${size}px Inter, "Segoe UI", Arial, sans-serif`;
+    c.font = font();
+    while (c.measureText(cv.dataset.asset).width > (f.w - 4) * S && size > 30) { size -= 2; c.font = font(); }
+    c.fillStyle = '#12263a'; c.textBaseline = 'alphabetic';
+    c.fillText(cv.dataset.asset, f.x * S, (f.y + f.h * 0.82) * S);
+  }
+})();
+</script>
+</body></html>

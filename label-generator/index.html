@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVS Label Generator</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+  :root{--ink:#12263a;--muted:#4a5866;--line:#d5dde3;--bg:#f4f7f9;--primary:#1b5e78;--accent:#4bacc6;--ok:#15803d;--warn:#a15c07;--err:#b91c1c}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.5}
+  header{background:#fff;border-bottom:3px solid var(--primary)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;align-items:center;gap:16px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+  header img{height:46px;width:auto}
+  h1{font-family:'Space Grotesk',Inter,sans-serif;font-size:24px;margin:0;line-height:1.2}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  main{padding:24px 0 60px}
+  .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+  .step h2{font-family:'Space Grotesk',Inter,sans-serif;font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+  .drop{border:2px dashed #9fb3c2;border-radius:10px;padding:26px;text-align:center;background:#fafcfd}
+  .drop.over{border-color:var(--primary);background:#eef6f9}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button,.btn{font:inherit;font-weight:600;border-radius:8px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);padding:10px 16px;cursor:pointer;min-height:44px}
+  button.primary{background:var(--primary);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .map{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  label.f{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}
+  select,input[type=text]{font:inherit;font-weight:400;padding:9px 10px;border:1.5px solid #b8c6d1;border-radius:8px;background:#fff;color:var(--ink);min-height:44px;width:100%}
+  .req{color:var(--err)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .pill{border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;background:#eef2f5}
+  .pill.ok{background:#e7f4ec;color:var(--ok)} .pill.warn{background:#fdf1e2;color:var(--warn)} .pill.err{background:#fbe9e9;color:var(--err)}
+  .designs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+  .design{position:relative;border:2px solid var(--line);border-radius:10px;padding:10px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:8px}
+  .design input{position:absolute;opacity:0;pointer-events:none}
+  .design:has(input:checked){border-color:var(--primary);box-shadow:0 0 0 3px #4bacc633}
+  .design:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+  .design .im{height:120px;display:flex;align-items:center;justify-content:center;background:#f4f7f9;border-radius:6px}
+  .design img{max-width:100%;max-height:110px;box-shadow:0 1px 3px #12263a33}
+  .design b{font-size:14px} .design span{font-size:13px;color:var(--muted)}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+  .opt input{width:20px;height:20px;margin-top:1px;accent-color:var(--primary);flex-shrink:0}
+  .preview{display:flex;gap:14px;flex-wrap:wrap}
+  .preview canvas{background:#fff;box-shadow:0 1px 4px #12263a2e;border-radius:4px;max-width:100%;height:auto}
+  .batches{display:flex;gap:10px;flex-wrap:wrap}
+  .status{margin-top:12px;font-size:14px;min-height:22px}
+  .status.err{color:var(--err)} .status.ok{color:var(--ok)}
+  progress{width:100%;height:10px;margin-top:10px;accent-color:var(--primary)}
+  table.issues{border-collapse:collapse;font-size:13px;margin-top:10px;width:100%}
+  table.issues th,table.issues td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+  .scroll{max-height:180px;overflow:auto;margin-top:8px}
+  .hidden{display:none !important}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:10px 20px 30px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <img src="logo.png" alt="AVS — Trust on Quality">
+    <div>
+      <h1>AVS Label Generator</h1>
+      <p>Synchroteam equipment list → print-ready maintenance labels with a unique QR code for every asset</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="step" aria-labelledby="s1">
+    <h2 id="s1"><span class="num">1</span>Load your equipment list</h2>
+    <p class="hint">Export the equipment list from Synchroteam as Excel (.xlsx) or CSV and drop it here. The file stays on your computer; nothing is uploaded.</p>
+    <div class="drop" id="drop">
+      <p style="margin:0 0 12px"><b>Drag and drop the file here</b>, or</p>
+      <div class="row" style="justify-content:center">
+        <label class="btn" for="file" style="display:inline-flex;align-items:center">Choose file…</label>
+        <input id="file" type="file" accept=".xlsx,.xls,.csv" class="hidden">
+        <button type="button" id="sample">Try with sample data</button>
+        <button type="button" id="tplBtn" class="hidden">Download Excel template (CSV)</button>
+      </div>
+      <p id="fileName" class="hint" style="margin:12px 0 0"></p>
+    </div>
+  </section>
+
+  <section class="step hidden" id="step2" aria-labelledby="s2">
+    <h2 id="s2"><span class="num">2</span>Match the columns</h2>
+    <p class="hint">Tell the generator which column holds what. It guesses from the column names; check the choices.</p>
+    <div class="map">
+      <label class="f"><span>Asset number <span class="req" aria-hidden="true">*</span></span><select id="cAsset"></select></label>
+      <label class="f">Equipment name<select id="cEquip"></select></label>
+      <label class="f">Location<select id="cLoc"></select></label>
+      <label class="f"><span>Synchroteam public link or its ID <span class="req" aria-hidden="true">*</span></span><select id="cLink"></select></label>
+      <label class="f">Group by (customer or site)<select id="cGroup"></select></label>
+      <label class="f">QR codes open<select id="qrMode"><option value="avs" selected>AVS asset page (recommended)</option><option value="synchro">Synchroteam page directly</option></select></label>
+      <label class="f" id="avsHostBox">AVS asset page address<input type="text" id="avsHost" value="https://asset.avssgroup.com/"></label>
+      <label class="f hidden" id="baseBox">Synchroteam link prefix<input type="text" id="base" value="https://avss.synchroteam.com/app/Equipments/PublicEquipment/"></label>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+    <div id="issuesBox" class="hidden">
+      <div class="scroll"><table class="issues"><thead><tr><th>Row</th><th>Asset</th><th>Problem</th></tr></thead><tbody id="issues"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="step hidden" id="step3" aria-labelledby="s3">
+    <h2 id="s3"><span class="num">3</span>Choose the label design</h2>
+    <p class="hint">Asset number, equipment and location are printed on the label where the design has those fields; technicians still write the service dates by hand.</p>
+    <div class="designs" id="designs" role="radiogroup" aria-label="Label design"></div>
+  </section>
+
+  <section class="step hidden" id="step4" aria-labelledby="s4">
+    <h2 id="s4"><span class="num">4</span>Print layout</h2>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="layout" value="single" checked><span><b>Label printer</b>: one label per PDF page, at the exact label size (Zebra, Brother, Brady…).</span></label>
+      <label class="opt"><input type="radio" name="layout" value="a4"><span><b>A4 sheets</b>: as many labels as fit on each A4 page, for a print shop or office printer.</span></label>
+      <label class="opt"><input type="checkbox" id="sortGroup" checked><span>Sort labels by group, then by asset number</span></label>
+      <label class="opt"><input type="checkbox" id="sepPage"><span>Add a divider label before each group (label-printer layout), so each site's labels come off the roll together</span></label>
+      <label class="opt"><input type="checkbox" id="skipBad" checked><span>Leave out rows without a link (otherwise they print with an empty QR box)</span></label>
+    </div>
+  </section>
+
+  <section class="step hidden" id="step5" aria-labelledby="s5">
+    <h2 id="s5"><span class="num">5</span>Preview and create the PDF</h2>
+    <p class="hint">The first three labels, exactly as they will print. Scan a QR code with your phone to check it opens the right equipment.</p>
+    <div class="preview" id="preview"></div>
+    <p class="hint" id="countLine" style="margin-top:14px"></p>
+    <div class="batches" id="batches"></div>
+    <progress id="prog" class="hidden" max="100" value="0"></progress>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
+</main>
+<footer>AVS Security Systems LLC · Tel 04-2717143 · avssgroup.com</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const PX2MM = 25.4 / 96;
+  const BATCH = 1000;
+  const SAMPLE = [
+    ['Asset No','Equipment','Location','Customer','Public Link'],
+    ['AVS-ELV-000001','CCTV Camera – Main Lobby','Ground Floor Lobby','Sample Customer A','https://avss.synchroteam.com/app/Equipments/PublicEquipment/03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
+    ['AVS-ELV-000002','Access Control Reader – Door 2','Level 1 Corridor','Sample Customer A','eb165152-d3e9-4453-b332-db872bd9e7db'],
+    ['AVS-ADR-000003','Automatic Sliding Door','Main Entrance','Sample Customer B','03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
+    ['AVS-ELV-000004','NVR Rack','Server Room','Sample Customer B','']
+  ];
+
+  let templates = [], tplImg = {}, rows = [], header = [], records = [], downloads = null;
+
+  // capabilities (downloads)
+  // Inside Claude the page saves files through Claude; on a normal website it downloads them directly.
+  if (window.claude && claude.use) {
+    claude.use('downloads').then(d => { downloads = d; if (d) $('tplBtn').classList.remove('hidden'); refreshBatches(); }).catch(() => {});
+  } else {
+    downloads = { save: async ({ filename, data }) => {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: filename.endsWith('.csv') ? 'text/csv' : 'application/octet-stream' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+      return { status: 'saved' };
+    } };
+    $('tplBtn').classList.remove('hidden');
+  }
+
+  fetch('templates/templates.json').then(r => r.json()).then(list => {
+    templates = list;
+    const box = $('designs');
+    list.forEach((t, i) => {
+      const lab = document.createElement('label');
+      lab.className = 'design';
+      lab.innerHTML = `<input type="radio" name="design" value="${t.key}" ${i === 0 ? 'checked' : ''}>
+        <div class="im"><img src="templates/${t.key}-thumb.jpg" alt=""></div>
+        <b>${t.title}</b><span>${t.size}</span>`;
+      box.appendChild(lab);
+      const im = new Image(); im.src = `templates/${t.key}.jpg`; tplImg[t.key] = im;
+      im.onload = () => { if (records.length) renderPreview(); };
+    });
+    box.addEventListener('change', () => { renderPreview(); refreshBatches(); });
+  });
+
+  // ---------- loading ----------
+  const drop = $('drop');
+  ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) readFile(f); });
+  $('file').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) readFile(f); });
+  $('sample').addEventListener('click', () => { $('fileName').textContent = 'Sample data loaded (4 example assets).'; load(SAMPLE); });
+  $('tplBtn').addEventListener('click', async () => {
+    const csv = 'Asset No,Equipment,Location,Customer,Public Link\n';
+    try { await downloads.save({ filename: 'AVS-label-template.csv', data: csv }); } catch (e) { setStatus(saveErr(e), 'err'); }
+  });
+
+  function readFile(f) {
+    $('fileName').textContent = 'Reading ' + f.name + '…';
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const wb = XLSX.read(new Uint8Array(fr.result), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+        $('fileName').textContent = `${f.name}: ${Math.max(0, data.length - 1)} rows from sheet “${wb.SheetNames[0]}”.`;
+        load(data);
+      } catch (e) { $('fileName').textContent = 'Could not read this file. Save it as .xlsx or .csv and try again.'; }
+    };
+    fr.readAsArrayBuffer(f);
+  }
+
+  const GUESS = {
+    cAsset: [/asset\s*(no|num|#|id|code|tag)/i, /^my\s*id$/i, /serial/i, /^id$/i, /reference|ref/i, /asset/i],
+    cEquip: [/equipment\s*name/i, /^name$/i, /description/i, /equipment/i, /model|type/i],
+    cLoc: [/location/i, /floor|area|room|zone/i, /site/i],
+    cLink: [/public/i, /link|url/i, /guid|uuid/i, /equipment\s*id/i, /^id$/i],
+    cGroup: [/customer|client/i, /site/i, /project/i]
+  };
+  function load(data) {
+    data = data.filter(r => r.some(c => String(c).trim() !== ''));
+    if (data.length < 2) { $('fileName').textContent = 'The file has no data rows.'; return; }
+    header = data[0].map((h, i) => String(h).trim() || `Column ${i + 1}`);
+    rows = data.slice(1);
+    const used = new Set();
+    for (const id of Object.keys(GUESS)) {
+      const sel = $(id);
+      const opt = ['<option value="-1">— none —</option>'].concat(header.map((h, i) => `<option value="${i}">${esc(h)}</option>`));
+      sel.innerHTML = opt.join('');
+      let pick = -1;
+      for (const re of GUESS[id]) { const i = header.findIndex((h, j) => re.test(h) && !used.has(j)); if (i >= 0) { pick = i; break; } }
+      if (id === 'cLink' && pick < 0) pick = guessLinkColumn();
+      if (pick >= 0) used.add(pick);
+      sel.value = pick;
+    }
+    ['step2','step3','step4','step5'].forEach(s => $(s).classList.remove('hidden'));
+    build();
+  }
+  function guessLinkColumn() {
+    const re = /synchroteam|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    for (let c = 0; c < header.length; c++) if (rows.slice(0, 20).some(r => re.test(String(r[c] || '')))) return c;
+    return -1;
+  }
+  ['cAsset','cEquip','cLoc','cLink','cGroup','base','avsHost','qrMode','sortGroup','skipBad','sepPage'].forEach(id => $(id).addEventListener('change', build));
+  document.querySelectorAll('input[name=layout]').forEach(r => r.addEventListener('change', refreshBatches));
+
+  // ---------- records ----------
+  // Every equipment's Synchroteam public link ends in a unique ID (GUID). The QR code is built from that ID:
+  // AVS mode -> https://asset.avssgroup.com/<id>, Synchroteam mode -> the Synchroteam public link.
+  function linkFor(v) {
+    v = String(v || '').trim();
+    const m = v.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if (!m) return '';
+    const id = m[0].toLowerCase();
+    const pre = s => { s = s.trim(); return s.endsWith('/') ? s : s + '/'; };
+    return $('qrMode').value === 'avs' ? pre($('avsHost').value) + id : pre($('base').value) + id;
+  }
+  $('qrMode').addEventListener('change', () => {
+    const avs = $('qrMode').value === 'avs';
+    $('avsHostBox').classList.toggle('hidden', !avs); $('baseBox').classList.toggle('hidden', avs);
+  });
+  function build() {
+    const ci = id => +$(id).value;
+    const a = ci('cAsset'), e = ci('cEquip'), l = ci('cLoc'), k = ci('cLink'), g = ci('cGroup');
+    const val = (r, i) => i >= 0 ? String(r[i] ?? '').trim() : '';
+    const seen = new Map(), seenLink = new Map(), issues = [];
+    let all = rows.map((r, i) => {
+      const rec = { row: i + 2, asset: val(r, a), equip: val(r, e), loc: val(r, l), group: val(r, g), raw: val(r, k) };
+      rec.link = linkFor(rec.raw);
+      if (!rec.asset) issues.push([rec.row, '', 'No asset number']);
+      if (k < 0 || !rec.link) issues.push([rec.row, rec.asset, rec.raw ? 'Link/ID not recognised: ' + rec.raw.slice(0, 40) : 'No Synchroteam link or ID']);
+      if (rec.asset) { if (seen.has(rec.asset)) issues.push([rec.row, rec.asset, 'Duplicate asset number (also row ' + seen.get(rec.asset) + ')']); else seen.set(rec.asset, rec.row); }
+      if (rec.link) { const key = rec.link.toLowerCase(); if (seenLink.has(key)) issues.push([rec.row, rec.asset, 'Same Synchroteam link as row ' + seenLink.get(key) + ', so the QR codes would be identical']); else seenLink.set(key, rec.row); }
+      return rec;
+    });
+    const noLink = all.filter(r => !r.link).length;
+    const dup = issues.filter(x => x[2].startsWith('Duplicate')).length;
+    const dupLink = issues.filter(x => x[2].startsWith('Same Synchroteam link')).length;
+    if ($('skipBad').checked) all = all.filter(r => r.link);
+    if ($('sortGroup').checked) {
+      const coll = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      all.sort((x, y) => coll.compare(x.group, y.group) || coll.compare(x.asset, y.asset));
+    }
+    records = all;
+    const groups = new Set(records.map(r => r.group)).size;
+    $('stats').innerHTML =
+      `<span class="pill">${rows.length} rows in file</span>` +
+      `<span class="pill ok">${records.length} labels to print</span>` +
+      (g >= 0 ? `<span class="pill">${groups} group${groups === 1 ? '' : 's'}</span>` : '') +
+      (noLink ? `<span class="pill warn">${noLink} without a usable link</span>` : '') +
+      (dup ? `<span class="pill err">${dup} duplicate asset no.</span>` : '') +
+      (dupLink ? `<span class="pill err">${dupLink} duplicate QR link${dupLink === 1 ? '' : 's'}</span>` : `<span class="pill ok">Every QR code unique</span>`);
+    $('issues').innerHTML = issues.slice(0, 500).map(x => `<tr><td>${x[0]}</td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('');
+    $('issuesBox').classList.toggle('hidden', !issues.length);
+    renderPreview(); refreshBatches();
+  }
+
+  // ---------- drawing (shared by preview and PDF) ----------
+  const curTpl = () => templates.find(t => t.key === (document.querySelector('input[name=design]:checked') || {}).value) || templates[0];
+  function qrMatrix(text) {
+    const q = qrcode(0, 'M'); q.addData(text); q.make();
+    const n = q.getModuleCount(); const m = [];
+    for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(q.isDark(r, c)); m.push(row); }
+    return m;
+  }
+  function fieldText(t, rec) {
+    const out = [];
+    const f = t.fields || {};
+    if (f.asset) out.push([f.asset, rec.asset]);
+    if (f.equipment) out.push([f.equipment, rec.equip]);
+    if (f.location) out.push([f.location, rec.loc]);
+    return out.filter(x => x[1]);
+  }
+
+  function renderPreview() {
+    const t = curTpl(); const box = $('preview');
+    if (!t || !records.length) { box.innerHTML = '<p class="hint">No labels to preview yet.</p>'; return; }
+    box.innerHTML = '';
+    const S = 3;
+    records.slice(0, 3).forEach(rec => {
+      const cv = document.createElement('canvas');
+      cv.width = t.w * S; cv.height = t.h * S;
+      cv.style.width = Math.min(t.w, 330) + 'px';
+      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', 'Label preview for ' + rec.asset);
+      const c = cv.getContext('2d'); c.scale(S, S);
+      const im = tplImg[t.key];
+      if (im && im.complete) c.drawImage(im, 0, 0, t.w, t.h);
+      drawQrCanvas(c, t.qr, rec.link);
+      for (const [f, txt] of fieldText(t, rec)) {
+        let size = f.fs || 12.5, s = txt;
+        c.fillStyle = '#12263a';
+        const font = sz => `${f.fs ? 700 : 600} ${sz}px Helvetica, Arial, sans-serif`;
+        c.font = font(size);
+        while (c.measureText(s).width > (f.fs ? f.w - 4 : f.w - 4) && size > 8) { size -= 0.5; c.font = font(size); }
+        while (c.measureText(s).width > f.w - 4 && s.length > 1) s = s.slice(0, -2) + '…';
+        const y = f.fs ? f.y + f.h * 0.82 : f.y + f.h - 3;
+        c.fillText(s, f.x + (f.fs ? 0 : 2), y);
+      }
+      box.appendChild(cv);
+    });
+  }
+  function drawQrCanvas(c, b, link) {
+    c.fillStyle = '#fff'; c.fillRect(b.x, b.y, b.w, b.h);
+    if (!link) { c.strokeStyle = '#b91c1c'; c.setLineDash([3, 2]); c.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2); c.setLineDash([]); c.fillStyle = '#b91c1c'; c.font = '600 11px Helvetica, Arial'; c.fillText('NO LINK', b.x + 8, b.y + b.h / 2 + 4); return; }
+    const m = qrMatrix(link), n = m.length + 2, u = b.w / n;
+    c.fillStyle = '#000';
+    for (let r = 0; r < m.length; r++) for (let col = 0; col < m.length; col++) if (m[r][col]) c.fillRect(b.x + (col + 1) * u, b.y + (r + 1) * u, u + 0.05, u + 0.05);
+  }
+
+  // ---------- PDF ----------
+  function layout() { return document.querySelector('input[name=layout]:checked').value; }
+  function refreshBatches() {
+    const box = $('batches'); box.innerHTML = '';
+    const t = curTpl();
+    if (!t || !records.length) { $('countLine').textContent = ''; return; }
+    const n = records.length, parts = Math.ceil(n / BATCH);
+    let per = '';
+    if (layout() === 'a4') { const g = a4Grid(t); per = ` · ${g.per} labels per A4 page, ${Math.ceil(n / g.per)} pages`; }
+    $('countLine').textContent = `${n} labels · ${t.title} (${t.size})${per}` + (parts > 1 ? ` · split into ${parts} PDFs of up to ${BATCH} labels so each file stays manageable` : '');
+    if (!downloads) {
+      const p = document.createElement('p'); p.className = 'hint';
+      p.textContent = 'Saving files is not available in this view. Open this page on its own (from its link) to create the PDF.';
+      box.appendChild(p);
+    }
+    for (let i = 0; i < parts; i++) {
+      const from = i * BATCH, to = Math.min(n, from + BATCH);
+      const b = document.createElement('button');
+      b.className = 'primary'; b.type = 'button';
+      b.textContent = parts > 1 ? `Create PDF: labels ${from + 1}–${to}` : `Create PDF (${n} labels)`;
+      b.disabled = !downloads;
+      b.addEventListener('click', () => makePdf(from, to, i + 1, parts, b));
+      box.appendChild(b);
+    }
+  }
+  function a4Grid(t) {
+    const w = t.w * PX2MM, h = t.h * PX2MM, M = 8, G = 4;
+    const fit = (W, H) => { const c = Math.floor((W - 2 * M + G) / (w + G)), r = Math.floor((H - 2 * M + G) / (h + G)); return { c, r, per: c * r, W, H }; };
+    const p = fit(210, 297), l = fit(297, 210);
+    return l.per > p.per ? { ...l, orient: 'landscape' } : { ...p, orient: 'portrait' };
+  }
+  async function makePdf(from, to, part, parts, btn) {
+    const t = curTpl(); const { jsPDF } = window.jspdf;
+    const w = t.w * PX2MM, h = t.h * PX2MM;
+    const list = records.slice(from, to);
+    const single = layout() === 'single';
+    btn.disabled = true; setStatus('Creating PDF…'); const prog = $('prog'); prog.classList.remove('hidden'); prog.value = 0;
+    try {
+      const im = tplImg[t.key]; if (!im.complete) await new Promise(r => im.onload = r);
+      const imgData = await toDataURL(im);
+      let doc, grid, slot = 0, first = true;
+      if (single) doc = new jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'landscape' : 'portrait', compress: true });
+      else { grid = a4Grid(t); doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: grid.orient, compress: true }); }
+      let lastGroup = null;
+      for (let i = 0; i < list.length; i++) {
+        const rec = list[i];
+        if (single) {
+          if (single && $('sepPage').checked && rec.group !== lastGroup) {
+            if (!first) doc.addPage([w, h], w > h ? 'landscape' : 'portrait');
+            drawDivider(doc, w, h, rec.group, list.filter(r => r.group === rec.group).length);
+            first = false;
+          }
+          if (!first) doc.addPage([w, h], w > h ? 'landscape' : 'portrait');
+          first = false;
+          drawLabel(doc, t, 0, 0, rec, imgData);
+        } else {
+          if (slot === grid.per) { doc.addPage('a4', grid.orient); slot = 0; }
+          const c = slot % grid.c, r = Math.floor(slot / grid.c);
+          const ox = (grid.W - (grid.c * w + (grid.c - 1) * 4)) / 2, oy = (grid.H - (grid.r * h + (grid.r - 1) * 4)) / 2;
+          drawLabel(doc, t, ox + c * (w + 4), oy + r * (h + 4), rec, imgData);
+          slot++;
+        }
+        lastGroup = rec.group;
+        if (i % 50 === 0) { prog.value = Math.round(i / list.length * 100); await new Promise(r => setTimeout(r)); }
+      }
+      prog.value = 100;
+      const blob = doc.output('blob');
+      const name = `AVS-labels-${t.key}${parts > 1 ? `-part${part}-of-${parts}` : ''}-${list.length}.pdf`;
+      setStatus(`PDF ready (${(blob.size / 1048576).toFixed(1)} MB). Saving…`);
+      await downloads.save({ filename: name, data: blob });
+      setStatus(`Saved ${name}.`, 'ok');
+    } catch (e) {
+      setStatus(e && e.code ? saveErr(e) : 'Something went wrong while creating the PDF: ' + (e && e.message || e), 'err');
+    } finally { btn.disabled = false; prog.classList.add('hidden'); }
+  }
+  function drawDivider(doc, w, h, group, count) {
+    doc.setDrawColor(27, 94, 120); doc.setLineWidth(0.6); doc.rect(1.5, 1.5, w - 3, h - 3);
+    doc.setTextColor(18, 38, 58); doc.setFont('helvetica', 'bold');
+    let size = Math.min(22, h * 0.9); doc.setFontSize(size);
+    const label = group || 'No group';
+    while (doc.getTextWidth(label) > w - 8 && size > 7) { size -= 1; doc.setFontSize(size); }
+    doc.text(label, w / 2, h / 2, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(Math.min(11, h * 0.4));
+    doc.text(`${count} label${count === 1 ? '' : 's'} follow`, w / 2, h / 2 + Math.min(9, h * 0.3), { align: 'center' });
+  }
+  function drawLabel(doc, t, ox, oy, rec, imgData) {
+    const k = PX2MM;
+    doc.addImage(imgData, 'JPEG', ox, oy, t.w * k, t.h * k, 'tpl-' + t.key, 'FAST');
+    const b = t.qr;
+    if (rec.link) {
+      const m = qrMatrix(rec.link), n = m.length + 2, u = b.w * k / n;
+      const x0 = ox + b.x * k, y0 = oy + b.y * k;
+      doc.setFillColor(255, 255, 255); doc.rect(x0, y0, b.w * k, b.h * k, 'F');
+      doc.setFillColor(0, 0, 0);
+      for (let r = 0; r < m.length; r++) {
+        let c = 0;
+        while (c < m.length) {
+          if (!m[r][c]) { c++; continue; }
+          let e = c; while (e < m.length && m[r][e]) e++;
+          doc.rect(x0 + (c + 1) * u, y0 + (r + 1) * u, (e - c) * u + 0.01, u + 0.01, 'F');
+          c = e;
+        }
+      }
+    } else {
+      doc.setDrawColor(185, 28, 28); doc.setLineWidth(0.3); doc.setLineDashPattern([1, 0.7], 0);
+      doc.rect(ox + b.x * k + 0.5, oy + b.y * k + 0.5, b.w * k - 1, b.h * k - 1);
+      doc.setLineDashPattern([], 0);
+    }
+    doc.setTextColor(18, 38, 58);
+    for (const [f, txt] of fieldText(t, rec)) {
+      doc.setFont('helvetica', 'bold');
+      let size = f.fs ? f.fs * 0.75 : 9.5, s = txt;
+      const maxW = (f.fs ? f.w - 4 : f.w - 4) * k;
+      doc.setFontSize(size);
+      while (doc.getTextWidth(s) > maxW && size > 6) { size -= 0.25; doc.setFontSize(size); }
+      while (doc.getTextWidth(s) > maxW && s.length > 1) s = s.slice(0, -2) + '…';
+      const y = f.fs ? f.y + f.h * 0.82 : f.y + f.h - 3;
+      doc.text(s, ox + (f.x + (f.fs ? 0 : 2)) * k, oy + y * k);
+    }
+  }
+  function toDataURL(im) {
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    c.getContext('2d').drawImage(im, 0, 0);
+    return c.toDataURL('image/jpeg', 0.9);
+  }
+  function setStatus(msg, cls) { const s = $('status'); s.textContent = msg; s.className = 'status' + (cls ? ' ' + cls : ''); }
+  function saveErr(e) {
+    return ({ declined: 'Download cancelled.', rate_limited: 'Another download prompt is open. Finish it, then try again.', too_large: 'This PDF is too large for this destination. Try a smaller batch.' })[e.code] || 'Saving is not available here. Open this page on its own and try again.';
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]); }
+})();
+</script>
+</body>
+</html>

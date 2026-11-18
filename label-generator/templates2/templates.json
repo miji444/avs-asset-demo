@@ -1,0 +1,217 @@
+[
+ {
+  "key": "classic",
+  "title": "Classic",
+  "kind": "Horizontal",
+  "size": "50 \u00d7 25 mm",
+  "wmm": 50,
+  "hmm": 25,
+  "w": 188.98,
+  "h": 94.49,
+  "best": "Cameras, readers, sensors: the company standard, with the new QR",
+  "fields": {
+   "asset": {
+    "x": 91.921875,
+    "y": 59.65625,
+    "w": 88.25,
+    "h": 12.59375,
+    "fs": 10.9606,
+    "weight": 700,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 88.25,
+    "cx": null
+   },
+   "location": {
+    "x": 91.921875,
+    "y": 72.25,
+    "w": 88.25,
+    "h": 10.421875,
+    "fs": 8.69291,
+    "weight": 600,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 88.25,
+    "cx": null
+   }
+  },
+  "qr": {
+   "x": 8.796875,
+   "y": 9.453125,
+   "w": 75.578125,
+   "h": 75.578125
+  }
+ },
+ {
+  "key": "bluepanel",
+  "title": "Blue Panel",
+  "kind": "Horizontal",
+  "size": "60 \u00d7 30 mm",
+  "wmm": 60,
+  "hmm": 30,
+  "w": 226.77,
+  "h": 113.39,
+  "best": "Panels, racks, door operators: bold and easy to spot",
+  "fields": {
+   "asset": {
+    "x": 119.359375,
+    "y": 80.171875,
+    "w": 97.34375,
+    "h": 13.46875,
+    "fs": 11.7165,
+    "weight": 700,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 97.34375,
+    "cx": null
+   },
+   "location": {
+    "x": 119.359375,
+    "y": 93.640625,
+    "w": 97.34375,
+    "h": 10.421875,
+    "fs": 8.69291,
+    "weight": 600,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 97.34375,
+    "cx": null
+   }
+  },
+  "qr": {
+   "x": 11.234375,
+   "y": 12.28125,
+   "w": 88.8125,
+   "h": 88.8125
+  }
+ },
+ {
+  "key": "slim",
+  "title": "Slim Strip",
+  "kind": "Horizontal",
+  "size": "70 \u00d7 20 mm",
+  "wmm": 70,
+  "hmm": 20,
+  "w": 264.57,
+  "h": 75.59,
+  "best": "Door frames, gate arms, rails: long and narrow surfaces",
+  "fields": {
+   "asset": {
+    "x": 90.15625,
+    "y": 29.984375,
+    "w": 108.046875,
+    "h": 13.90625,
+    "fs": 12.0945,
+    "weight": 700,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 108.046875,
+    "cx": null
+   },
+   "location": {
+    "x": 90.15625,
+    "y": 43.890625,
+    "w": 108.046875,
+    "h": 10.421875,
+    "fs": 8.69291,
+    "weight": 600,
+    "color": "rgb(18, 38, 58)",
+    "center": false,
+    "maxW": 108.046875,
+    "cx": null
+   }
+  },
+  "qr": {
+   "x": 6.28125,
+   "y": 5.671875,
+   "w": 64.25,
+   "h": 64.25
+  }
+ },
+ {
+  "key": "upright",
+  "title": "Upright",
+  "kind": "Vertical",
+  "size": "30 \u00d7 45 mm",
+  "wmm": 30,
+  "hmm": 45,
+  "w": 113.39,
+  "h": 170.08,
+  "best": "Narrow spots: card reader sides, poles, cabinet edges",
+  "fields": {
+   "asset": {
+    "x": 11.125,
+    "y": 119.46875,
+    "w": 91.109375,
+    "h": 12.59375,
+    "fs": 10.9606,
+    "weight": 700,
+    "color": "rgb(18, 38, 58)",
+    "center": true,
+    "maxW": 113.375,
+    "cx": 56.6875
+   },
+   "location": {
+    "x": 24.5625,
+    "y": 132.0625,
+    "w": 64.25,
+    "h": 10.421875,
+    "fs": 8.69291,
+    "weight": 600,
+    "color": "rgb(18, 38, 58)",
+    "center": true,
+    "maxW": 113.375,
+    "cx": 56.6875
+   }
+  },
+  "qr": {
+   "x": 16.0625,
+   "y": 34.828125,
+   "w": 81.25,
+   "h": 81.25
+  }
+ },
+ {
+  "key": "badge",
+  "title": "Scan Badge",
+  "kind": "Vertical",
+  "size": "35 \u00d7 50 mm",
+  "wmm": 35,
+  "hmm": 50,
+  "w": 132.28,
+  "h": 188.98,
+  "best": "Visible client-facing spots: lobbies, entrances, AV rooms",
+  "fields": {
+   "asset": {
+    "x": 15.0625,
+    "y": 153.515625,
+    "w": 102.15625,
+    "h": 15,
+    "fs": 12.0945,
+    "weight": 700,
+    "color": "rgb(255, 255, 255)",
+    "center": true,
+    "maxW": 132.28125,
+    "cx": 66.140625
+   },
+   "location": {
+    "x": 34.015625,
+    "y": 169.265625,
+    "w": 64.25,
+    "h": 10,
+    "fs": 8.69291,
+    "weight": 600,
+    "color": "rgb(255, 255, 255)",
+    "center": true,
+    "maxW": 132.28125,
+    "cx": 66.140625
+   }
+  },
+  "qr": {
+   "x": 18.890625,
+   "y": 46.3125,
+   "w": 94.484375,
+   "h": 94.484375
+  }
+ }
+]

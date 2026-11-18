@@ -89,11 +89,11 @@
 
   <section class="step hidden" id="step2" aria-labelledby="s2">
     <h2 id="s2"><span class="num">2</span>Match the columns</h2>
-    <p class="hint">Tell the generator which column holds what. It guesses from the column names; check the choices.</p>
+    <p class="hint">Tell the generator which column holds what. It guesses from the column names; check the choices. If the asset column holds a name like <b>AVS/DXB/SD/101 - Reception Area</b>, the part after “ - ” becomes the second line automatically.</p>
     <div class="map">
       <label class="f"><span>Asset number <span class="req" aria-hidden="true">*</span></span><select id="cAsset"></select></label>
-      <label class="f">Equipment name<select id="cEquip"></select></label>
-      <label class="f">Location<select id="cLoc"></select></label>
+      <label class="f">Second line on the tag (location or name)<select id="cLoc"></select></label>
+      <select id="cEquip" class="hidden" aria-hidden="true" tabindex="-1"></select>
       <label class="f"><span>Synchroteam public link or its ID <span class="req" aria-hidden="true">*</span></span><select id="cLink"></select></label>
       <label class="f">Group by (customer or site)<select id="cGroup"></select></label>
       <label class="f">QR codes open<select id="qrMode"><option value="avs" selected>AVS asset page (recommended)</option><option value="synchro">Synchroteam page directly</option></select></label>
@@ -108,7 +108,7 @@
 
   <section class="step hidden" id="step3" aria-labelledby="s3">
     <h2 id="s3"><span class="num">3</span>Choose the label design</h2>
-    <p class="hint">Asset number, equipment and location are printed on the label where the design has those fields; technicians still write the service dates by hand.</p>
+    <p class="hint">Every tag prints its own QR code, the Asset ID and the second line. Sizes are the real print sizes.</p>
     <div class="designs" id="designs" role="radiogroup" aria-label="Label design"></div>
   </section>
 
@@ -117,6 +117,9 @@
     <div class="opts">
       <label class="opt"><input type="radio" name="layout" value="single" checked><span><b>Label printer</b>: one label per PDF page, at the exact label size (Zebra, Brother, Brady…).</span></label>
       <label class="opt"><input type="radio" name="layout" value="a4"><span><b>A4 sheets</b>: as many labels as fit on each A4 page, for a print shop or office printer.</span></label>
+      <fieldset style="border:0;padding:0;margin:4px 0 6px"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">QR code style</legend>
+      <label class="opt"><input type="radio" name="qrstyle" value="avs" checked><span><b>AVS style</b>: round dots, AVS-blue corners, logo in the middle</span></label>
+      <label class="opt"><input type="radio" name="qrstyle" value="plain"><span><b>Plain</b>: classic square QR, for very small or rough surfaces</span></label></fieldset>
       <label class="opt"><input type="checkbox" id="sortGroup" checked><span>Sort labels by group, then by asset number</span></label>
       <label class="opt"><input type="checkbox" id="sepPage"><span>Add a divider label before each group (label-printer layout), so each site's labels come off the roll together</span></label>
       <label class="opt"><input type="checkbox" id="skipBad" checked><span>Leave out rows without a link (otherwise they print with an empty QR box)</span></label>
@@ -144,14 +147,14 @@
   const PX2MM = 25.4 / 96;
   const BATCH = 1000;
   const SAMPLE = [
-    ['Asset No','Equipment','Location','Customer','Public Link'],
-    ['AVS-ELV-000001','CCTV Camera – Main Lobby','Ground Floor Lobby','Sample Customer A','https://avss.synchroteam.com/app/Equipments/PublicEquipment/03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
-    ['AVS-ELV-000002','Access Control Reader – Door 2','Level 1 Corridor','Sample Customer A','eb165152-d3e9-4453-b332-db872bd9e7db'],
-    ['AVS-ADR-000003','Automatic Sliding Door','Main Entrance','Sample Customer B','03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
-    ['AVS-ELV-000004','NVR Rack','Server Room','Sample Customer B','']
+    ['Equipment','Customer','Public Link'],
+    ['AVS/DXB/SD/101 - Reception Area','Sample Customer A','https://avss.synchroteam.com/app/Equipments/PublicEquipment/03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
+    ['AVS/DXB/SD/102 - Main Lobby','Sample Customer A','eb165152-d3e9-4453-b332-db872bd9e7db'],
+    ['AVS/DXB/SD/103 - Car Park Entrance','Sample Customer B','03fc11bf-fdfe-4799-b67c-b62e9f6686ce'],
+    ['AVS/DXB/SD/104 - Server Room','Sample Customer B','']
   ];
 
-  let templates = [], tplImg = {}, rows = [], header = [], records = [], downloads = null;
+  let templates = [], tplImg = {}, logoImg = new Image(), rows = [], header = [], records = [], downloads = null;
 
   // capabilities (downloads)
   // Inside Claude the page saves files through Claude; on a normal website it downloads them directly.
@@ -167,17 +170,18 @@
     $('tplBtn').classList.remove('hidden');
   }
 
-  fetch('templates/templates.json').then(r => r.json()).then(list => {
+  logoImg.src = 'logo.png';
+  fetch('templates2/templates.json').then(r => r.json()).then(list => {
     templates = list;
     const box = $('designs');
     list.forEach((t, i) => {
       const lab = document.createElement('label');
       lab.className = 'design';
       lab.innerHTML = `<input type="radio" name="design" value="${t.key}" ${i === 0 ? 'checked' : ''}>
-        <div class="im"><img src="templates/${t.key}-thumb.jpg" alt=""></div>
-        <b>${t.title}</b><span>${t.size}</span>`;
+        <div class="im"><img src="templates2/${t.key}-thumb.jpg" alt=""></div>
+        <b>${t.title}</b><span>${t.kind} · ${t.size}</span><span>${t.best}</span>`;
       box.appendChild(lab);
-      const im = new Image(); im.src = `templates/${t.key}.jpg`; tplImg[t.key] = im;
+      const im = new Image(); im.src = `templates2/${t.key}.jpg`; tplImg[t.key] = im;
       im.onload = () => { if (records.length) renderPreview(); };
     });
     box.addEventListener('change', () => { renderPreview(); refreshBatches(); });
@@ -189,7 +193,7 @@
   ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) readFile(f); });
   $('file').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) readFile(f); });
-  $('sample').addEventListener('click', () => { $('fileName').textContent = 'Sample data loaded (4 example assets).'; load(SAMPLE); });
+  $('sample').addEventListener('click', () => { $('fileName').textContent = 'Sample data loaded (4 example assets, in the Synchroteam “ID - Name” format).'; load(SAMPLE); });
   $('tplBtn').addEventListener('click', async () => {
     const csv = 'Asset No,Equipment,Location,Customer,Public Link\n';
     try { await downloads.save({ filename: 'AVS-label-template.csv', data: csv }); } catch (e) { setStatus(saveErr(e), 'err'); }
@@ -211,9 +215,9 @@
   }
 
   const GUESS = {
-    cAsset: [/asset\s*(no|num|#|id|code|tag)/i, /^my\s*id$/i, /serial/i, /^id$/i, /reference|ref/i, /asset/i],
-    cEquip: [/equipment\s*name/i, /^name$/i, /description/i, /equipment/i, /model|type/i],
-    cLoc: [/location/i, /floor|area|room|zone/i, /site/i],
+    cAsset: [/asset\s*(no|num|#|id|code|tag)/i, /^my\s*id$/i, /equipment/i, /^name$/i, /serial/i, /^id$/i, /reference|ref/i, /asset/i],
+    cEquip: [/^$/],
+    cLoc: [/location/i, /floor|area|room|zone/i, /description/i],
     cLink: [/public/i, /link|url/i, /guid|uuid/i, /equipment\s*id/i, /^id$/i],
     cGroup: [/customer|client/i, /site/i, /project/i]
   };
@@ -241,8 +245,9 @@
     for (let c = 0; c < header.length; c++) if (rows.slice(0, 20).some(r => re.test(String(r[c] || '')))) return c;
     return -1;
   }
-  ['cAsset','cEquip','cLoc','cLink','cGroup','base','avsHost','qrMode','sortGroup','skipBad','sepPage'].forEach(id => $(id).addEventListener('change', build));
+  ['cAsset','cLoc','cLink','cGroup','base','avsHost','qrMode','sortGroup','skipBad','sepPage'].forEach(id => $(id).addEventListener('change', build));
   document.querySelectorAll('input[name=layout]').forEach(r => r.addEventListener('change', refreshBatches));
+  document.querySelectorAll('input[name=qrstyle]').forEach(r => r.addEventListener('change', renderPreview));
 
   // ---------- records ----------
   // Every equipment's Synchroteam public link ends in a unique ID (GUID). The QR code is built from that ID:
@@ -261,11 +266,13 @@
   });
   function build() {
     const ci = id => +$(id).value;
-    const a = ci('cAsset'), e = ci('cEquip'), l = ci('cLoc'), k = ci('cLink'), g = ci('cGroup');
+    const a = ci('cAsset'), l = ci('cLoc'), k = ci('cLink'), g = ci('cGroup');
     const val = (r, i) => i >= 0 ? String(r[i] ?? '').trim() : '';
     const seen = new Map(), seenLink = new Map(), issues = [];
     let all = rows.map((r, i) => {
-      const rec = { row: i + 2, asset: val(r, a), equip: val(r, e), loc: val(r, l), group: val(r, g), raw: val(r, k) };
+      const rec = { row: i + 2, asset: val(r, a), loc: val(r, l), group: val(r, g), raw: val(r, k) };
+      const dash = rec.asset.indexOf(' - ');
+      if (dash > 0) { if (!rec.loc) rec.loc = rec.asset.slice(dash + 3).trim(); rec.asset = rec.asset.slice(0, dash).trim(); }
       rec.link = linkFor(rec.raw);
       if (!rec.asset) issues.push([rec.row, '', 'No asset number']);
       if (k < 0 || !rec.link) issues.push([rec.row, rec.asset, rec.raw ? 'Link/ID not recognised: ' + rec.raw.slice(0, 40) : 'No Synchroteam link or ID']);
@@ -297,54 +304,90 @@
 
   // ---------- drawing (shared by preview and PDF) ----------
   const curTpl = () => templates.find(t => t.key === (document.querySelector('input[name=design]:checked') || {}).value) || templates[0];
-  function qrMatrix(text) {
-    const q = qrcode(0, 'M'); q.addData(text); q.make();
+  const qrStyle = () => (document.querySelector('input[name=qrstyle]:checked') || {}).value || 'avs';
+  const INK = '#12263a', PRIMARY = '#1b5e78';
+  function qrMatrix(text, ecc) {
+    const q = qrcode(0, ecc); q.addData(text); q.make();
     const n = q.getModuleCount(); const m = [];
     for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(q.isDark(r, c)); m.push(row); }
     return m;
   }
-  function fieldText(t, rec) {
-    const out = [];
-    const f = t.fields || {};
-    if (f.asset) out.push([f.asset, rec.asset]);
-    if (f.equipment) out.push([f.equipment, rec.equip]);
-    if (f.location) out.push([f.location, rec.loc]);
-    return out.filter(x => x[1]);
+  function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fill(); }
+  /** AVS-style QR (high error correction so the logo can sit on top): returns a canvas and where the logo goes (0–1 of the box). */
+  function styledQr(link, px = 6) {
+    const m = qrMatrix(link, 'H'), n = m.length, Q = 2, N = n + 2 * Q, u = px;
+    const cv = document.createElement('canvas'); cv.width = cv.height = N * u;
+    const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height);
+    const finders = [[0, 0], [0, n - 7], [n - 7, 0]];
+    const inFinder = (r, k) => finders.some(([fr, fc]) => r >= fr && r < fr + 7 && k >= fc && k < fc + 7);
+    const lw = 0.34 * n, lh = lw * 0.48, c0 = (n - lw) / 2, c1 = (n + lw) / 2, r0 = (n - lh) / 2, r1 = (n + lh) / 2;
+    const inLogo = (r, k) => k + 0.5 >= c0 - 0.6 && k + 0.5 <= c1 + 0.6 && r + 0.5 >= r0 - 0.6 && r + 0.5 <= r1 + 0.6;
+    c.fillStyle = INK;
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) {
+      if (!m[r][k] || inFinder(r, k) || inLogo(r, k)) continue;
+      c.beginPath(); c.arc((Q + k + 0.5) * u, (Q + r + 0.5) * u, u * 0.43, 0, Math.PI * 2); c.fill();
+    }
+    for (const [fr, fc] of finders) {
+      const x = (Q + fc) * u, y = (Q + fr) * u;
+      c.fillStyle = PRIMARY; rrect(c, x, y, 7 * u, 7 * u, 2.2 * u);
+      c.fillStyle = '#fff'; rrect(c, x + u, y + u, 5 * u, 5 * u, 1.5 * u);
+      c.fillStyle = PRIMARY; rrect(c, x + 2 * u, y + 2 * u, 3 * u, 3 * u, 0.9 * u);
+    }
+    c.fillStyle = '#fff'; rrect(c, (Q + c0 - 0.4) * u, (Q + r0 - 0.4) * u, (lw + 0.8) * u, (lh + 0.8) * u, u);
+    return { canvas: cv, logo: { x: (Q + c0) / N, y: (Q + r0) / N, w: lw / N, h: lh / N } };
   }
+  /** Fits the logo inside the logo box (keeps its shape). Box and result in the same units. */
+  function logoRect(bx, by, bw, bh) {
+    const s = Math.min(bw / logoImg.naturalWidth, bh / logoImg.naturalHeight);
+    const w = logoImg.naturalWidth * s, h = logoImg.naturalHeight * s;
+    return [bx + (bw - w) / 2, by + (bh - h) / 2, w, h];
+  }
+  function fieldText(t, rec) {
+    const f = t.fields || {}, out = [];
+    if (f.asset && rec.asset) out.push([f.asset, rec.asset]);
+    if (f.location && rec.loc) out.push([f.location, rec.loc]);
+    return out;
+  }
+  const textY = f => f.y + f.h * 0.8;
+  const textX = f => f.center ? f.cx : f.x;
 
   function renderPreview() {
     const t = curTpl(); const box = $('preview');
     if (!t || !records.length) { box.innerHTML = '<p class="hint">No labels to preview yet.</p>'; return; }
     box.innerHTML = '';
-    const S = 3;
+    const S = 4;
     records.slice(0, 3).forEach(rec => {
       const cv = document.createElement('canvas');
-      cv.width = t.w * S; cv.height = t.h * S;
-      cv.style.width = Math.min(t.w, 330) + 'px';
-      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', 'Label preview for ' + rec.asset);
+      cv.width = Math.round(t.w * S); cv.height = Math.round(t.h * S);
+      cv.style.width = Math.round(t.w * 1.6) + 'px';
+      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `Tag preview for ${rec.asset}${rec.loc ? ', ' + rec.loc : ''}`);
       const c = cv.getContext('2d'); c.scale(S, S);
       const im = tplImg[t.key];
       if (im && im.complete) c.drawImage(im, 0, 0, t.w, t.h);
-      drawQrCanvas(c, t.qr, rec.link);
+      drawQrPreview(c, t.qr, rec.link);
       for (const [f, txt] of fieldText(t, rec)) {
-        let size = f.fs || 12.5, s = txt;
-        c.fillStyle = '#12263a';
-        const font = sz => `${f.fs ? 700 : 600} ${sz}px Helvetica, Arial, sans-serif`;
-        c.font = font(size);
-        while (c.measureText(s).width > (f.fs ? f.w - 4 : f.w - 4) && size > 8) { size -= 0.5; c.font = font(size); }
-        while (c.measureText(s).width > f.w - 4 && s.length > 1) s = s.slice(0, -2) + '…';
-        const y = f.fs ? f.y + f.h * 0.82 : f.y + f.h - 3;
-        c.fillText(s, f.x + (f.fs ? 0 : 2), y);
+        let size = f.fs, s = txt;
+        const font = sz => `${f.weight >= 650 ? 700 : 600} ${sz}px Helvetica, Arial, sans-serif`;
+        c.font = font(size); c.fillStyle = f.color; c.textAlign = f.center ? 'center' : 'left';
+        while (c.measureText(s).width > f.maxW && size > f.fs * 0.6) { size -= 0.25; c.font = font(size); }
+        while (c.measureText(s).width > f.maxW && s.length > 1) s = s.slice(0, -2) + '…';
+        c.fillText(s, textX(f), textY(f));
       }
       box.appendChild(cv);
     });
   }
-  function drawQrCanvas(c, b, link) {
+  function drawQrPreview(c, b, link) {
     c.fillStyle = '#fff'; c.fillRect(b.x, b.y, b.w, b.h);
-    if (!link) { c.strokeStyle = '#b91c1c'; c.setLineDash([3, 2]); c.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2); c.setLineDash([]); c.fillStyle = '#b91c1c'; c.font = '600 11px Helvetica, Arial'; c.fillText('NO LINK', b.x + 8, b.y + b.h / 2 + 4); return; }
-    const m = qrMatrix(link), n = m.length + 2, u = b.w / n;
-    c.fillStyle = '#000';
-    for (let r = 0; r < m.length; r++) for (let col = 0; col < m.length; col++) if (m[r][col]) c.fillRect(b.x + (col + 1) * u, b.y + (r + 1) * u, u + 0.05, u + 0.05);
+    if (!link) { c.strokeStyle = '#b91c1c'; c.setLineDash([3, 2]); c.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2); c.setLineDash([]); c.fillStyle = '#b91c1c'; c.font = '600 9px Helvetica, Arial'; c.textAlign = 'center'; c.fillText('NO LINK', b.x + b.w / 2, b.y + b.h / 2 + 3); return; }
+    if (qrStyle() === 'avs') {
+      const q = styledQr(link);
+      c.drawImage(q.canvas, b.x, b.y, b.w, b.h);
+      if (logoImg.complete && logoImg.naturalWidth) c.drawImage(logoImg, ...logoRect(b.x + q.logo.x * b.w, b.y + q.logo.y * b.h, q.logo.w * b.w, q.logo.h * b.h));
+    } else {
+      const m = qrMatrix(link, 'M'), n = m.length + 2, u = b.w / n;
+      c.fillStyle = '#000';
+      for (let r = 0; r < m.length; r++) for (let k = 0; k < m.length; k++) if (m[r][k]) c.fillRect(b.x + (k + 1) * u, b.y + (r + 1) * u, u + 0.05, u + 0.05);
+    }
   }
 
   // ---------- PDF ----------
@@ -373,19 +416,20 @@
     }
   }
   function a4Grid(t) {
-    const w = t.w * PX2MM, h = t.h * PX2MM, M = 8, G = 4;
+    const w = t.wmm, h = t.hmm, M = 8, G = 4;
     const fit = (W, H) => { const c = Math.floor((W - 2 * M + G) / (w + G)), r = Math.floor((H - 2 * M + G) / (h + G)); return { c, r, per: c * r, W, H }; };
     const p = fit(210, 297), l = fit(297, 210);
     return l.per > p.per ? { ...l, orient: 'landscape' } : { ...p, orient: 'portrait' };
   }
   async function makePdf(from, to, part, parts, btn) {
     const t = curTpl(); const { jsPDF } = window.jspdf;
-    const w = t.w * PX2MM, h = t.h * PX2MM;
+    const w = t.wmm, h = t.hmm;
     const list = records.slice(from, to);
     const single = layout() === 'single';
     btn.disabled = true; setStatus('Creating PDF…'); const prog = $('prog'); prog.classList.remove('hidden'); prog.value = 0;
     try {
       const im = tplImg[t.key]; if (!im.complete) await new Promise(r => im.onload = r);
+      if (!logoImg.complete) await new Promise(r => logoImg.onload = r);
       const imgData = await toDataURL(im);
       let doc, grid, slot = 0, first = true;
       if (single) doc = new jsPDF({ unit: 'mm', format: [w, h], orientation: w > h ? 'landscape' : 'portrait', compress: true });
@@ -433,13 +477,16 @@
     doc.text(`${count} label${count === 1 ? '' : 's'} follow`, w / 2, h / 2 + Math.min(9, h * 0.3), { align: 'center' });
   }
   function drawLabel(doc, t, ox, oy, rec, imgData) {
-    const k = PX2MM;
-    doc.addImage(imgData, 'JPEG', ox, oy, t.w * k, t.h * k, 'tpl-' + t.key, 'FAST');
-    const b = t.qr;
-    if (rec.link) {
-      const m = qrMatrix(rec.link), n = m.length + 2, u = b.w * k / n;
-      const x0 = ox + b.x * k, y0 = oy + b.y * k;
-      doc.setFillColor(255, 255, 255); doc.rect(x0, y0, b.w * k, b.h * k, 'F');
+    const k = t.wmm / t.w;                      // mm per template px
+    doc.addImage(imgData, 'JPEG', ox, oy, t.wmm, t.hmm, 'tpl-' + t.key, 'FAST');
+    const b = t.qr, x0 = ox + b.x * k, y0 = oy + b.y * k, bw = b.w * k, bh = b.h * k;
+    if (rec.link && qrStyle() === 'avs') {
+      const q = styledQr(rec.link);
+      doc.addImage(q.canvas, 'PNG', x0, y0, bw, bh, undefined, 'FAST');
+      doc.addImage(logoImg, 'PNG', ...logoRect(x0 + q.logo.x * bw, y0 + q.logo.y * bh, q.logo.w * bw, q.logo.h * bh), 'avs-logo', 'FAST');
+    } else if (rec.link) {
+      const m = qrMatrix(rec.link, 'M'), n = m.length + 2, u = bw / n;
+      doc.setFillColor(255, 255, 255); doc.rect(x0, y0, bw, bh, 'F');
       doc.setFillColor(0, 0, 0);
       for (let r = 0; r < m.length; r++) {
         let c = 0;
@@ -452,19 +499,19 @@
       }
     } else {
       doc.setDrawColor(185, 28, 28); doc.setLineWidth(0.3); doc.setLineDashPattern([1, 0.7], 0);
-      doc.rect(ox + b.x * k + 0.5, oy + b.y * k + 0.5, b.w * k - 1, b.h * k - 1);
+      doc.rect(x0 + 0.5, y0 + 0.5, bw - 1, bh - 1);
       doc.setLineDashPattern([], 0);
     }
-    doc.setTextColor(18, 38, 58);
     for (const [f, txt] of fieldText(t, rec)) {
+      const rgb = (f.color.match(/\d+/g) || [18, 38, 58]).map(Number);
+      doc.setTextColor(rgb[0], rgb[1], rgb[2]);
       doc.setFont('helvetica', 'bold');
-      let size = f.fs ? f.fs * 0.75 : 9.5, s = txt;
-      const maxW = (f.fs ? f.w - 4 : f.w - 4) * k;
+      let size = f.fs * 0.75, s = txt;              // px -> pt
+      const maxW = f.maxW * k;
       doc.setFontSize(size);
-      while (doc.getTextWidth(s) > maxW && size > 6) { size -= 0.25; doc.setFontSize(size); }
+      while (doc.getTextWidth(s) > maxW && size > f.fs * 0.75 * 0.6) { size -= 0.2; doc.setFontSize(size); }
       while (doc.getTextWidth(s) > maxW && s.length > 1) s = s.slice(0, -2) + '…';
-      const y = f.fs ? f.y + f.h * 0.82 : f.y + f.h - 3;
-      doc.text(s, ox + (f.x + (f.fs ? 0 : 2)) * k, oy + y * k);
+      doc.text(s, ox + textX(f) * k, oy + textY(f) * k, f.center ? { align: 'center' } : undefined);
     }
   }
   function toDataURL(im) {

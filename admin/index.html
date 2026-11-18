@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>AVS admin – demo</title>
+<style>
+:root{--ink:#12263a;--muted:#4a5866;--line:#d5dde3;--primary:#1b5e78;--accent:#4bacc6;--ok:#15803d;--err:#b91c1c}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#f4f7f9;line-height:1.5;font-size:16px}
+.demo{background:#12263a;color:#fff;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px;flex-wrap:wrap}
+.demo a{color:#fff;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
+header{background:#fff;border-bottom:3px solid var(--primary)}
+.w{max-width:1000px;margin:0 auto;padding:0 16px}
+header .w{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:10px}
+header .sp{flex:1}
+.co b{display:block;line-height:1.3}.co span{font-size:13px;color:var(--muted)}
+main{padding:16px 0 32px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+h1{font-size:22px;margin:0 0 4px}
+.muted{color:var(--muted);font-size:14px;margin:0}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 4px}
+input{font:inherit;width:100%;max-width:420px;min-height:44px;padding:8px 10px;border:1.5px solid #9fb0bd;border-radius:8px;color:var(--ink)}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+button.primary{background:var(--primary);color:#fff}
+button.danger{border-color:var(--err);color:var(--err)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ok{background:#e7f4ec;color:var(--ok);border-radius:8px;padding:10px 14px;font-weight:600;margin-bottom:14px}
+.errs{background:#fbe9e9;color:var(--err);border-radius:8px;padding:10px 14px;margin:0 0 10px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td.none{color:var(--muted)}
+.sr{position:absolute;left:-9999px}
+.hidden{display:none !important}
+</style></head><body>
+<div class="demo"><span><b>DEMO</b> · admin page with sample sites. Password: <b>demo</b>. Changes stay in this browser only.</span><a href="../">Demo asset pages</a></div>
+<header><div class="w"><img src="../assets/logo.png" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS admin</b><span>Asset page contacts</span></div><span class="sp"></span><button type="button" id="out" class="hidden">Sign out</button></div></header>
+<main class="w" id="app"></main>
+<script>
+(() => {
+  const FIELDS = [['engineer', 'Cluster Engineer', 'text'], ['engineerPhone', 'Cluster Engineer Phone', 'tel'], ['technician', 'Technician', 'text'], ['technicianPhone', 'Technician Phone', 'tel']];
+  const SITES = [
+    { id: 55, name: 'Sample Business Tower', customer: 'Sample Customer LLC', note: 'All three demo assets are at this site.' },
+    { id: 56, name: 'Sample Hospital', customer: 'Sample Healthcare' },
+    { id: 57, name: 'Sample Mall', customer: 'Sample Retail Group' }
+  ];
+  const START = { default: {}, sites: { '55': { engineer: 'Sample Engineer', engineerPhone: '050 000 0001', technician: 'Sample Technician', technicianPhone: '050 000 0002' } } };
+  const KEY = 'avs-demo-contacts';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || structuredClone(START); } catch { return structuredClone(START); } };
+  const save = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  let signed = false; try { signed = sessionStorage.getItem('avs-demo-admin') === '1'; } catch {}
+  const app = document.getElementById('app'), out = document.getElementById('out');
+  out.onclick = () => { signed = false; try { sessionStorage.removeItem('avs-demo-admin'); } catch {} ; render(); };
+  const cell = v => v ? `<td>${esc(v)}</td>` : '<td class="none">—</td>';
+
+  function render(msg) {
+    out.classList.toggle('hidden', !signed);
+    if (!signed) return login();
+    const id = location.hash.replace('#site-', '');
+    if (location.hash.startsWith('#site-')) return edit(id);
+    list(msg);
+  }
+  function login(err) {
+    app.innerHTML = `<div class="card" style="max-width:460px"><h1>Sign in</h1><p class="muted">AVS staff only. Demo password: <b>demo</b></p>
+      ${err ? `<p class="errs" role="alert">${esc(err)}</p>` : ''}
+      <form id="f"><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="current-password" required>
+      <div style="margin-top:16px"><button class="primary" type="submit">Sign in</button></div></form></div>`;
+    document.getElementById('pw').focus();
+    document.getElementById('f').onsubmit = e => { e.preventDefault();
+      if (document.getElementById('pw').value === 'demo') { signed = true; try { sessionStorage.setItem('avs-demo-admin', '1'); } catch {} ; render(); }
+      else login('Wrong password.'); };
+  }
+  function list(msg) {
+    const st = load(), d = st.default || {};
+    const rows = SITES.map(s => { const c = st.sites[s.id] || {}; const own = FIELDS.some(([k]) => c[k]);
+      return `<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.customer)}</span></td>${own ? FIELDS.map(([k]) => cell(c[k])).join('') : '<td class="none" colspan="4">Using default contacts</td>'}<td><a class="btn" href="#site-${s.id}">Edit</a></td></tr>`; }).join('');
+    app.innerHTML = `${msg ? `<p class="ok" role="status">${esc(msg)}</p>` : ''}
+      <div class="card"><h1>Default contacts</h1><p class="muted">Shown for every site without its own contacts.</p>
+      <div class="tw"><table><thead><tr>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead>
+      <tbody><tr>${FIELDS.map(([k]) => cell(d[k])).join('')}<td><a class="btn" href="#site-default">Edit</a></td></tr></tbody></table></div></div>
+      <div class="card"><h1>Sites</h1><p class="muted">In the live system this list comes from Synchroteam, with search and pages.</p>
+      <div class="tw"><table><thead><tr><th scope="col">Site</th>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="row"><button type="button" id="reset">Reset demo data</button></div>`;
+    document.getElementById('reset').onclick = () => { save(structuredClone(START)); list('Demo data reset.'); };
+  }
+  function edit(id) {
+    const st = load();
+    const site = id === 'default' ? { id: 'default', name: 'Default contacts', customer: 'Used for every site that has no contacts of its own' } : SITES.find(s => String(s.id) === id);
+    if (!site) { location.hash = ''; return; }
+    const v = id === 'default' ? st.default || {} : st.sites[id] || {};
+    app.innerHTML = `<p><a href="#">← All sites</a></p><div class="card"><h1>${esc(site.name)}</h1><p class="muted">${esc(site.customer)}${site.note ? ' · ' + esc(site.note) : ''}</p>
+      <div id="errs"></div>
+      <form id="f">${FIELDS.map(([k, label, type]) => `<label for="${k}">${label}</label><input id="${k}" type="${type}" value="${esc(v[k] || '')}" maxlength="80"${type === 'tel' ? ' inputmode="tel" placeholder="050 123 4567"' : ''}>`).join('')}
+      <p class="muted" style="margin-top:12px">Leave a box empty to hide it. Phone numbers get Call and WhatsApp buttons on the asset page.</p>
+      <div class="row" style="margin-top:16px"><button class="primary" type="submit">Save</button>
+      <button class="danger" type="button" id="clr">${id === 'default' ? 'Clear defaults' : 'Use default contacts'}</button><a class="btn" href="#">Cancel</a></div></form></div>`;
+    document.getElementById(FIELDS[0][0]).focus();
+    const done = (entry) => { const s2 = load(); if (id === 'default') s2.default = entry || {}; else if (entry) s2.sites[id] = entry; else delete s2.sites[id]; save(s2);
+      location.hash = ''; setTimeout(() => list(`Saved: ${site.name}.${String(id) === '55' || id === 'default' ? ' Open a demo asset page to see it.' : ''}`)); };
+    document.getElementById('clr').onclick = () => done(null);
+    document.getElementById('f').onsubmit = e => { e.preventDefault();
+      const entry = {}, errors = [];
+      for (const [k, label, type] of FIELDS) { const val = document.getElementById(k).value.trim();
+        if (type === 'tel' && val && !/^[+\d][\d\s()-]{6,}$/.test(val)) errors.push(`${label}: use digits only, e.g. 050 123 4567`);
+        if (val) entry[k] = val; }
+      if (errors.length) { document.getElementById('errs').innerHTML = `<div class="errs" role="alert">${errors.map(esc).join('<br>')}</div>`; return; }
+      done(Object.keys(entry).length ? entry : null); };
+  }
+  addEventListener('hashchange', () => render());
+  render();
+})();
+</script>
+</body></html>

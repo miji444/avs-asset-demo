@@ -37,7 +37,7 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
 .real b{display:block;font-size:15px;margin-bottom:4px}
 .hidden{display:none !important}
 </style></head><body>
-<div class="demo"><span><b>DEMO</b> · real asset ID, sample service data</span><a href="../">About the demo</a></div>
+<div class="demo"><span><b>DEMO</b> · sample service data</span><a href="../">About the demo</a></div>
 <header><div class="w"><img src="../assets/logo.png" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
 <main class="w" id="app"></main>
 <footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
@@ -78,7 +78,6 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
     return d.length >= 8 ? d : ''; };
   const btns = v => { const n = wa(v); return n ? `<div class="btns"><a class="btn" href="tel:+${n}">Call</a><a class="btn wa" href="https://wa.me/${n}?text=${encodeURIComponent('Hello AVS, regarding asset ' + (asset || ''))}" rel="noopener noreferrer">WhatsApp</a></div>` : ''; };
   const row = (label, v, phone) => v ? `<div class="row"><div class="n">${label}</div><div class="v">${esc(v)}</div>${phone ? btns(v) : ''}</div>` : '';
-  const real = `https://avss.synchroteam.com/app/Equipments/PublicEquipment/${guid}`;
   document.title = `${asset || 'Asset'} · AVS (demo)`;
   app.innerHTML = `
 <div class="card">
@@ -99,8 +98,7 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
   ${row('Cluster Engineer', c.engineer)}${row('Cluster Engineer Phone', c.engineerPhone, 1)}${row('Technician', c.technician)}${row('Technician Phone', c.technicianPhone, 1)}
 </div>
 <div class="card"><h2>PPM history</h2><ul>${visits.map(v => `<li><div class="d">${fd(v[1])}</div><div class="s">${ft(v[0])} – ${ft(v[1])} · ${v[2]} · Job ${v[3]}</div></li>`).join('')}</ul></div>
-<div class="real"><b>Demo check: this tag is linked to a real Synchroteam asset</b>The service data above is sample data. The live system shows this asset's real PPM visits. Open the real record to confirm the tag points to the right equipment.
-  <div class="btns"><a class="btn" href="${real}" rel="noopener noreferrer">Open in Synchroteam</a></div></div>
+
 <div class="card"><h2>AVS office</h2><a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a><p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>`;
 })();
 addEventListener('hashchange', () => location.reload());

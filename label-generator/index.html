@@ -96,9 +96,9 @@
       <select id="cEquip" class="hidden" aria-hidden="true" tabindex="-1"></select>
       <label class="f"><span>Synchroteam public link or its ID <span class="req" aria-hidden="true">*</span></span><select id="cLink"></select></label>
       <label class="f">Group by (customer or site)<select id="cGroup"></select></label>
-      <label class="f">QR codes open<select id="qrMode"><option value="avs" selected>AVS asset page (recommended)</option><option value="demo">Demo page (for testing, works now)</option></select></label>
-      <label class="f" id="avsHostBox">AVS asset page address<input type="text" id="avsHost" value="https://asset.avssgroup.com/"><span class="hint" style="margin:4px 0 0;font-weight:400">This address must be live before you print. Until IT sets it up, scanning shows “site can't be reached”; to test now, choose “Demo page”.</span></label>
-      <input type="hidden" id="base" value=""><span id="baseBox" class="hidden"></span>
+      <label class="f">QR codes open<select id="qrMode"><option value="synchro" selected>Synchroteam page (client sees the work done)</option><option value="avs">AVS asset page (needs AVS server)</option><option value="demo">Demo page (for testing, works now)</option></select></label>
+      <label class="f hidden" id="avsHostBox">AVS asset page address<input type="text" id="avsHost" value="https://asset.avssgroup.com/"><span class="hint" style="margin:4px 0 0;font-weight:400">This address must be live before you print. Until IT sets it up, scanning shows “site can't be reached”; to test now, choose “Demo page”.</span></label>
+      <input type="hidden" id="base" value="https://avss.synchroteam.com/app/Equipments/PublicEquipment/"><span id="baseBox" class="hidden"></span>
     </div>
     <div class="stats" id="stats" aria-live="polite"></div>
     <div id="issuesBox" class="hidden">
@@ -260,7 +260,7 @@
     const pre = s => { s = s.trim(); return s.endsWith('/') ? s : s + '/'; };
     const mode = $('qrMode').value;
     if (mode === 'demo') return DEMO_PAGE + '#' + new URLSearchParams({ g: id, a: rec.asset || '', n: rec.loc || '' });
-    return pre($('avsHost').value) + id;
+    return mode === 'avs' ? pre($('avsHost').value) + id : pre($('base').value) + id;
   }
   $('qrMode').addEventListener('change', () => {
     const mode = $('qrMode').value;

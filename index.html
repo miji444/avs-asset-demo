@@ -255,10 +255,10 @@ body:has(.page:target) #home{display:none}
     if (d.startsWith('+')) d = d.slice(1); else if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '971' + d.slice(1); else if (!d.startsWith('971') && d.length <= 9) d = '971' + d;
     return d.length >= 8 ? d : ''; };
   function apply() {
-    let st; try { st = JSON.parse(localStorage.getItem('avs-demo-contacts')); } catch {}
+    let st; try { st = JSON.parse(localStorage.getItem('avs-demo-contacts-v2')); } catch {}
     if (!st) return;
-    const own = st.sites && st.sites['55'] || {};
-    const c = KEYS.some(([k]) => own[k]) ? own : (st.default || {});
+    const own = (st.sites || {})['55'] || {}, grp = (own.group && (st.groups || {})[own.group]) || {}, dft = st.default || {};
+    const c = {}; for (const [k] of KEYS) c[k] = own[k] || grp[k] || dft[k] || '';
     for (const [k, isPhone] of KEYS) document.querySelectorAll('[data-field="' + k + '"]').forEach(row => {
       const v = c[k] || '';
       row.hidden = !v;

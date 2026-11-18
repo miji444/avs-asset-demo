@@ -31,34 +31,54 @@ th{font-size:13px;color:var(--muted);font-weight:600}
 td.none{color:var(--muted)}
 .sr{position:absolute;left:-9999px}
 .hidden{display:none !important}
+.from{display:block;font-size:12px;color:var(--muted)}
+.tag{display:inline-block;background:#e8f1f5;color:var(--primary);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600}
+select{font:inherit;width:100%;max-width:420px;min-height:44px;padding:8px 10px;border:1.5px solid #9fb0bd;border-radius:8px;background:#fff;color:var(--ink)}
+.chk{width:20px;height:20px;accent-color:var(--primary)}
+h2{font-size:18px;margin:0 0 4px}
 </style></head><body>
 <div class="demo"><span><b>DEMO</b> · admin page with sample sites. Password: <b>demo</b>. Changes stay in this browser only.</span><a href="../">Demo asset pages</a></div>
-<header><div class="w"><img src="../assets/logo.png" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS admin</b><span>Asset page contacts</span></div><span class="sp"></span><button type="button" id="out" class="hidden">Sign out</button></div></header>
+<header><div class="w"><img src="../assets/logo.png" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS admin</b><span>Groups, sites and contacts</span></div><span class="sp"></span><button type="button" id="out" class="hidden">Sign out</button></div></header>
 <main class="w" id="app"></main>
 <script>
 (() => {
   const FIELDS = [['engineer', 'Cluster Engineer', 'text'], ['engineerPhone', 'Cluster Engineer Phone', 'tel'], ['technician', 'Technician', 'text'], ['technicianPhone', 'Technician Phone', 'tel']];
   const SITES = [
-    { id: 55, name: 'Sample Business Tower', customer: 'Sample Customer LLC', note: 'All three demo assets are at this site.' },
+    { id: 55, name: 'Sample Business Tower', customer: 'Sample Customer LLC', note: 'The three demo assets are at this site.' },
     { id: 56, name: 'Sample Hospital', customer: 'Sample Healthcare' },
-    { id: 57, name: 'Sample Mall', customer: 'Sample Retail Group' }
+    { id: 57, name: 'Sample Mall', customer: 'Sample Retail Group' },
+    { id: 58, name: 'Sample Residence', customer: 'Sample Properties' }
   ];
-  const START = { default: {}, sites: { '55': { engineer: 'Sample Engineer', engineerPhone: '050 000 0001', technician: 'Sample Technician', technicianPhone: '050 000 0002' } } };
-  const KEY = 'avs-demo-contacts';
+  const START = {
+    default: { engineer: 'AVS Service Desk', engineerPhone: '04 271 7143' },
+    groups: { g1: { name: 'Cluster A – Sample', engineer: 'Sample Engineer', engineerPhone: '050 000 0001', technician: 'Sample Technician', technicianPhone: '050 000 0002' } },
+    sites: { '55': { group: 'g1' }, '56': { group: 'g1' } }
+  };
+  const KEY = 'avs-demo-contacts-v2';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || structuredClone(START); } catch { return structuredClone(START); } };
   const save = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  const hasAny = o => !!o && FIELDS.some(([k]) => o[k]);
+  const resolve = (st, id) => { const s = st.sites[id] || {}, g = (s.group && st.groups[s.group]) || {}, d = st.default || {}, out = {};
+    for (const [k] of FIELDS) out[k] = s[k] ? [s[k], 'site override'] : g[k] ? [g[k], 'from group'] : d[k] ? [d[k], 'default'] : null; return out; };
+  const telOk = v => !v || /^[+\d][\d\s()-]{6,}$/.test(v);
   let signed = false; try { signed = sessionStorage.getItem('avs-demo-admin') === '1'; } catch {}
   const app = document.getElementById('app'), out = document.getElementById('out');
   out.onclick = () => { signed = false; try { sessionStorage.removeItem('avs-demo-admin'); } catch {} ; render(); };
   const cell = v => v ? `<td>${esc(v)}</td>` : '<td class="none">—</td>';
+  const go = (h, msg) => { history.replaceState(null, '', h || location.pathname); render(msg); scrollTo(0, 0); };
+  const inputs = (v, ph = {}) => FIELDS.map(([k, l, t]) => `<label for="${k}">${l}</label><input id="${k}" type="${t}" value="${esc(v[k] || '')}" maxlength="80"${t === 'tel' ? ' inputmode="tel"' : ''} placeholder="${esc(ph[k] || (t === 'tel' ? '050 123 4567' : ''))}">`).join('');
+  const readInputs = () => { const e = {}, errs = []; for (const [k, l, t] of FIELDS) { const v = document.getElementById(k).value.trim(); if (t === 'tel' && !telOk(v)) errs.push(`${l}: use digits only, e.g. 050 123 4567`); if (v) e[k] = v; } return [e, errs]; };
+  const showErrs = errs => { document.getElementById('errs').innerHTML = errs.length ? `<div class="errs" role="alert">${errs.map(esc).join('<br>')}</div>` : ''; return errs.length; };
 
   function render(msg) {
     out.classList.toggle('hidden', !signed);
     if (!signed) return login();
-    const id = location.hash.replace('#site-', '');
-    if (location.hash.startsWith('#site-')) return edit(id);
-    list(msg);
+    const h = location.hash;
+    if (h.startsWith('#group-')) return group(h.slice(7));
+    if (h.startsWith('#site-')) return site(h.slice(6));
+    if (h === '#default') return def();
+    overview(msg);
   }
   function login(err) {
     app.innerHTML = `<div class="card" style="max-width:460px"><h1>Sign in</h1><p class="muted">AVS staff only. Demo password: <b>demo</b></p>
@@ -70,43 +90,73 @@ td.none{color:var(--muted)}
       if (document.getElementById('pw').value === 'demo') { signed = true; try { sessionStorage.setItem('avs-demo-admin', '1'); } catch {} ; render(); }
       else login('Wrong password.'); };
   }
-  function list(msg) {
-    const st = load(), d = st.default || {};
-    const rows = SITES.map(s => { const c = st.sites[s.id] || {}; const own = FIELDS.some(([k]) => c[k]);
-      return `<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.customer)}</span></td>${own ? FIELDS.map(([k]) => cell(c[k])).join('') : '<td class="none" colspan="4">Using default contacts</td>'}<td><a class="btn" href="#site-${s.id}">Edit</a></td></tr>`; }).join('');
+  function overview(msg) {
+    const st = load(), counts = {}; let ungrouped = 0;
+    for (const s of SITES) { const g = (st.sites[s.id] || {}).group; if (g && st.groups[g]) counts[g] = (counts[g] || 0) + 1; else ungrouped++; }
+    const groups = Object.entries(st.groups).sort((a, b) => a[1].name.localeCompare(b[1].name));
+    const grows = groups.map(([id, g]) => `<tr><td><b>${esc(g.name)}</b><span class="from">${counts[id] || 0} site${counts[id] === 1 ? '' : 's'}</span></td>${FIELDS.map(([k]) => cell(g[k])).join('')}<td><a class="btn" href="#group-${id}">Edit</a></td></tr>`).join('');
+    const d = st.default || {};
+    const srows = SITES.map(s => { const own = st.sites[s.id] || {}, g = own.group && st.groups[own.group], r = resolve(st, s.id);
+      const c = k => r[k] ? `<td>${esc(r[k][0])}<span class="from">${r[k][1]}</span></td>` : '<td class="none">—</td>';
+      return `<tr><td><b>${esc(s.name)}</b><span class="from">${esc(s.customer)}</span></td><td>${g ? `<span class="tag">${esc(g.name)}</span>` : '<span class="muted">No group</span>'}</td>${c('engineer')}${c('engineerPhone')}${c('technician')}${c('technicianPhone')}<td><a class="btn" href="#site-${s.id}">Edit</a></td></tr>`; }).join('');
     app.innerHTML = `${msg ? `<p class="ok" role="status">${esc(msg)}</p>` : ''}
-      <div class="card"><h1>Default contacts</h1><p class="muted">Shown for every site without its own contacts.</p>
-      <div class="tw"><table><thead><tr>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead>
-      <tbody><tr>${FIELDS.map(([k]) => cell(d[k])).join('')}<td><a class="btn" href="#site-default">Edit</a></td></tr></tbody></table></div></div>
-      <div class="card"><h1>Sites</h1><p class="muted">In the live system this list comes from Synchroteam, with search and pages.</p>
-      <div class="tw"><table><thead><tr><th scope="col">Site</th>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead><tbody>${rows}</tbody></table></div></div>
-      <div class="row"><button type="button" id="reset">Reset demo data</button></div>`;
-    document.getElementById('reset').onclick = () => { save(structuredClone(START)); list('Demo data reset.'); };
+      <div class="card"><div class="row" style="justify-content:space-between"><div><h1>Groups</h1><p class="muted">Each group (cluster) has one Cluster Engineer and one Technician for all its sites.</p></div><a class="btn primary" href="#group-new">Add group</a></div>
+      <div class="tw" style="margin-top:10px"><table><thead><tr><th scope="col">Group</th>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead>
+      <tbody>${grows || '<tr><td colspan="6" class="none">No groups yet.</td></tr>'}<tr><td><b>Default</b><span class="from">${ungrouped} site${ungrouped === 1 ? '' : 's'} without a group</span></td>${FIELDS.map(([k]) => cell(d[k])).join('')}<td><a class="btn" href="#default">Edit</a></td></tr></tbody></table></div></div>
+      <div class="card"><h1>Sites</h1><p class="muted">In the live system this list comes from Synchroteam, with search, group filter and pages. Each asset's QR page uses its site's contacts.</p>
+      <div class="tw"><table><thead><tr><th scope="col">Site</th><th scope="col">Group</th>${FIELDS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col"><span class="sr">Action</span></th></tr></thead><tbody>${srows}</tbody></table></div></div>
+      <div class="row"><a class="btn" href="../#avs-elv-000142">Open a demo asset page</a><button type="button" id="reset">Reset demo data</button></div>`;
+    document.getElementById('reset').onclick = () => { save(structuredClone(START)); go('', 'Demo data reset.'); };
   }
-  function edit(id) {
+  function def() {
     const st = load();
-    const site = id === 'default' ? { id: 'default', name: 'Default contacts', customer: 'Used for every site that has no contacts of its own' } : SITES.find(s => String(s.id) === id);
-    if (!site) { location.hash = ''; return; }
-    const v = id === 'default' ? st.default || {} : st.sites[id] || {};
-    app.innerHTML = `<p><a href="#">← All sites</a></p><div class="card"><h1>${esc(site.name)}</h1><p class="muted">${esc(site.customer)}${site.note ? ' · ' + esc(site.note) : ''}</p>
-      <div id="errs"></div>
-      <form id="f">${FIELDS.map(([k, label, type]) => `<label for="${k}">${label}</label><input id="${k}" type="${type}" value="${esc(v[k] || '')}" maxlength="80"${type === 'tel' ? ' inputmode="tel" placeholder="050 123 4567"' : ''}>`).join('')}
-      <p class="muted" style="margin-top:12px">Leave a box empty to hide it. Phone numbers get Call and WhatsApp buttons on the asset page.</p>
-      <div class="row" style="margin-top:16px"><button class="primary" type="submit">Save</button>
-      <button class="danger" type="button" id="clr">${id === 'default' ? 'Clear defaults' : 'Use default contacts'}</button><a class="btn" href="#">Cancel</a></div></form></div>`;
-    document.getElementById(FIELDS[0][0]).focus();
-    const done = (entry) => { const s2 = load(); if (id === 'default') s2.default = entry || {}; else if (entry) s2.sites[id] = entry; else delete s2.sites[id]; save(s2);
-      location.hash = ''; setTimeout(() => list(`Saved: ${site.name}.${String(id) === '55' || id === 'default' ? ' Open a demo asset page to see it.' : ''}`)); };
-    document.getElementById('clr').onclick = () => done(null);
-    document.getElementById('f').onsubmit = e => { e.preventDefault();
-      const entry = {}, errors = [];
-      for (const [k, label, type] of FIELDS) { const val = document.getElementById(k).value.trim();
-        if (type === 'tel' && val && !/^[+\d][\d\s()-]{6,}$/.test(val)) errors.push(`${label}: use digits only, e.g. 050 123 4567`);
-        if (val) entry[k] = val; }
-      if (errors.length) { document.getElementById('errs').innerHTML = `<div class="errs" role="alert">${errors.map(esc).join('<br>')}</div>`; return; }
-      done(Object.keys(entry).length ? entry : null); };
+    app.innerHTML = `<p><a href="#">← Back</a></p><div class="card"><h1>Default contacts</h1><p class="muted">Used for sites that are not in a group.</p><div id="errs"></div>
+      <form id="f">${inputs(st.default || {})}<div class="row" style="margin-top:16px"><button class="primary" type="submit">Save</button><button class="danger" type="button" id="clr">Clear defaults</button><a class="btn" href="#">Cancel</a></div></form></div>`;
+    document.getElementById('clr').onclick = () => { const s2 = load(); s2.default = {}; save(s2); go('', 'Default contacts cleared.'); };
+    document.getElementById('f').onsubmit = e => { e.preventDefault(); const [en, errs] = readInputs(); if (showErrs(errs)) return; const s2 = load(); s2.default = en; save(s2); go('', 'Saved: Default contacts.'); };
   }
-  addEventListener('hashchange', () => render());
+  function group(id) {
+    const st = load(), isNew = id === 'new', g = isNew ? { name: '' } : st.groups[id];
+    if (!g) return go('');
+    const rows = SITES.map(s => { const cur = (st.sites[s.id] || {}).group, other = cur && cur !== id && st.groups[cur];
+      return `<tr><td><input class="chk" type="checkbox" id="s${s.id}" value="${s.id}"${cur === id ? ' checked' : ''}></td><td><label for="s${s.id}" style="margin:0">${esc(s.name)}</label><span class="from">${esc(s.customer)}</span></td><td>${other ? `<span class="from">Now in ${esc(other.name)}; ticking moves it here</span>` : ''}</td></tr>`; }).join('');
+    app.innerHTML = `<p><a href="#">← All groups and sites</a></p><div class="card"><h1>${isNew ? 'New group' : esc(g.name)}</h1><p class="muted">This Cluster Engineer and Technician show on every site in the group, unless a site has its own override.</p><div id="errs"></div>
+      <form id="f"><label for="name">Group name</label><input id="name" type="text" value="${esc(g.name)}" maxlength="60" placeholder="e.g. Cluster A – Deira">${inputs(g)}
+      <h2 style="margin-top:22px">Sites in this group</h2><p class="muted">In the live system you search and add sites, or add all that match a search.</p>
+      <div class="tw"><table><thead><tr><th scope="col"><span class="sr">In group</span></th><th scope="col">Site</th><th scope="col">Note</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="row" style="margin-top:16px"><button class="primary" type="submit">${isNew ? 'Create group' : 'Save'}</button>${isNew ? '' : '<button class="danger" type="button" id="del">Delete group</button>'}<a class="btn" href="#">Cancel</a></div></form></div>`;
+    document.getElementById('name').focus();
+    const del = document.getElementById('del');
+    if (del) del.onclick = () => { const s2 = load(); for (const k in s2.sites) if (s2.sites[k].group === id) { delete s2.sites[k].group; if (!hasAny(s2.sites[k])) delete s2.sites[k]; } delete s2.groups[id]; save(s2); go('', `Deleted group ${g.name}. Its sites now use the default contacts.`); };
+    document.getElementById('f').onsubmit = e => { e.preventDefault();
+      const name = document.getElementById('name').value.trim(); const [en, errs] = readInputs(); const s2 = load();
+      if (!name) errs.unshift('Group name is required.');
+      if (Object.entries(s2.groups).some(([k, x]) => k !== id && x.name.toLowerCase() === name.toLowerCase())) errs.unshift('Another group already has this name.');
+      if (showErrs(errs)) return;
+      const gid = isNew ? 'g' + Date.now().toString(36) : id;
+      s2.groups[gid] = { name, ...en };
+      for (const st2 of SITES) { const box = document.getElementById('s' + st2.id), cur = s2.sites[st2.id] || {};
+        if (box.checked) s2.sites[st2.id] = { ...cur, group: gid };
+        else if (cur.group === gid) { delete cur.group; if (hasAny(cur)) s2.sites[st2.id] = cur; else delete s2.sites[st2.id]; } }
+      save(s2); go('', `Saved: ${name}. Open a demo asset page to see it.`); };
+  }
+  function site(id) {
+    const st = load(), s = SITES.find(x => String(x.id) === id); if (!s) return go('');
+    const cur = st.sites[id] || {};
+    const ph = gsel => { const g = gsel && st.groups[gsel], d = st.default || {}, o = {}; for (const [k] of FIELDS) o[k] = g && g[k] ? `From group: ${g[k]}` : d[k] ? `Default: ${d[k]}` : ''; return o; };
+    const groups = Object.entries(st.groups).sort((a, b) => a[1].name.localeCompare(b[1].name));
+    app.innerHTML = `<p><a href="#">← All groups and sites</a></p><div class="card"><h1>${esc(s.name)}</h1><p class="muted">${esc(s.customer)}${s.note ? ' · ' + esc(s.note) : ''}</p><div id="errs"></div>
+      <form id="f"><label for="grp">Group</label><select id="grp"><option value="">No group (use default contacts)</option>${groups.map(([gid, g]) => `<option value="${gid}"${cur.group === gid ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select>
+      <h2 style="margin-top:20px">Override for this site only</h2><p class="muted">Leave a box empty to use the group's contact (shown in grey).</p>
+      <div id="ins">${inputs(cur, ph(cur.group))}</div>
+      <div class="row" style="margin-top:16px"><button class="primary" type="submit">Save</button><button class="danger" type="button" id="clr">Remove overrides</button><a class="btn" href="#">Cancel</a></div></form></div>`;
+    const sel = document.getElementById('grp');
+    sel.onchange = () => { const p = ph(sel.value); for (const [k] of FIELDS) document.getElementById(k).placeholder = p[k] || ''; };
+    const store = en => { const s2 = load(), next = { ...(sel.value ? { group: sel.value } : {}), ...en }; if (next.group || hasAny(next)) s2.sites[id] = next; else delete s2.sites[id]; save(s2); go('', `Saved: ${s.name}.${id === '55' ? ' Open a demo asset page to see it.' : ''}`); };
+    document.getElementById('clr').onclick = () => store({});
+    document.getElementById('f').onsubmit = e => { e.preventDefault(); const [en, errs] = readInputs(); if (showErrs(errs)) return; store(en); };
+  }
+  addEventListener('hashchange', () => { render(); scrollTo(0, 0); });
   render();
 })();
 </script>

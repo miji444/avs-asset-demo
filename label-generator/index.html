@@ -217,7 +217,7 @@
   const GUESS = {
     cAsset: [/asset\s*(no|num|#|id|code|tag)/i, /^my\s*id$/i, /equipment/i, /^name$/i, /serial/i, /^id$/i, /reference|ref/i, /asset/i],
     cEquip: [/^$/],
-    cLoc: [/location/i, /floor|area|room|zone/i, /description/i],
+    cLoc: [/location/i, /floor|area|room|zone/i, /type/i, /description/i],
     cLink: [/public/i, /link|url/i, /guid|uuid/i, /equipment\s*id/i, /^id$/i],
     cGroup: [/customer|client/i, /site/i, /project/i]
   };
@@ -252,7 +252,7 @@
   // ---------- records ----------
   // Every equipment's Synchroteam public link ends in a unique ID (GUID). The QR code is built from that ID:
   // AVS mode -> https://asset.avssgroup.com/<id>, Synchroteam mode -> the Synchroteam public link.
-  const DEMO_PAGE = 'https://miji444.github.io/avs-asset-demo/asset/';
+  const DEMO_PAGE = 'https://miji444.github.io/avs-asset-demo/p/';
   const guidOf = v => { const m = String(v || '').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i); return m ? m[0].toLowerCase() : ''; };
   function linkFor(v, rec = {}) {
     const id = guidOf(v);
@@ -273,8 +273,8 @@
     const seen = new Map(), seenLink = new Map(), issues = [];
     let all = rows.map((r, i) => {
       const rec = { row: i + 2, asset: val(r, a), loc: val(r, l), group: val(r, g), raw: val(r, k) };
-      const dash = rec.asset.indexOf(' - ');
-      if (dash > 0) { if (!rec.loc) rec.loc = rec.asset.slice(dash + 3).trim(); rec.asset = rec.asset.slice(0, dash).trim(); }
+      const sp = rec.asset.match(/^(.+?)\s+-\s*(.+)$/) || rec.asset.match(/^(.*\/\d+)-(?=[A-Za-z])(.+)$/);
+      if (sp) { rec.asset = sp[1].trim(); rec.loc = sp[2].trim(); }
       rec.link = linkFor(rec.raw, rec);
       rec.guid = guidOf(rec.raw);
       if (!rec.asset) issues.push([rec.row, '', 'No asset number']);

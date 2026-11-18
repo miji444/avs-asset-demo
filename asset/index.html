@@ -48,7 +48,9 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
   const KNOWN = { '84911992-8066-4d37-995e-dbbf576f6942': ['AVS/DXB/SD/101', 'Reception Area'] };
   const h = location.hash.slice(1);
   const p = new URLSearchParams(h.includes('=') ? h : '');
-  const guid = (p.get('g') || (h.includes('=') ? '' : h)).toLowerCase();
+  let guid = (p.get('g') || (h.includes('=') ? '' : h)).toLowerCase();
+  // Demo: any scan shows the sample page. An unknown or missing code falls back to the sample asset.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(guid)) guid = '84911992-8066-4d37-995e-dbbf576f6942';
   const known = KNOWN[guid] || [];
   const asset = p.get('a') || known[0] || '', name = p.get('n') || known[1] || '';
   const app = document.getElementById('app');

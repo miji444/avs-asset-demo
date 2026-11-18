@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Asset service record · AVS (demo)</title>
+<style>
+:root{--ink:#12263a;--muted:#4a5866;--line:#d5dde3;--primary:#1b5e78;--accent:#4bacc6;--ok:#15803d;--warn:#a15c07;--wa:#0b7a3e}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#f4f7f9;line-height:1.5;font-size:16px}
+header{background:#fff;border-bottom:3px solid var(--primary)}
+.w{max-width:640px;margin:0 auto;padding:0 16px}
+header .w{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:10px}
+.co b{display:block;font-size:16px;line-height:1.3}.co span{font-size:13px;color:var(--muted)}
+main{padding:16px 0 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+h1{font-size:21px;margin:0 0 2px;line-height:1.25}
+h2{font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em;color:var(--primary)}
+.id{font-size:15px;margin:0}.id b{font-size:17px;letter-spacing:.02em}
+.muted{color:var(--muted);font-size:14px;margin:2px 0 0}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;margin-top:10px}
+.badge.ok{background:#e7f4ec;color:var(--ok)}.badge.due{background:#fdf1e2;color:var(--warn)}
+dl{margin:0;display:grid;grid-template-columns:minmax(110px,38%) 1fr;gap:8px 12px}
+dt{color:var(--muted);font-size:14px}dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.row{padding:10px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0;padding-top:0}
+.row .n{font-size:14px;color:var(--muted)}.row .v{font-weight:600;overflow-wrap:anywhere}
+.btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+a.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:96px;padding:8px 14px;border-radius:8px;border:1.5px solid var(--primary);color:var(--primary);text-decoration:none;font-weight:700;font-size:15px}
+a.btn.wa{border-color:var(--wa);color:var(--wa)}
+a.btn.primary{background:var(--primary);color:#fff;width:100%}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+ul{list-style:none;margin:0;padding:0}
+li{padding:10px 0;border-top:1px solid var(--line)}li:first-child{border-top:0;padding-top:0}
+li .d{font-weight:700}li .s{font-size:14px;color:var(--muted)}
+.empty{color:var(--muted);margin:0}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 24px}
+
+.demo{background:#12263a;color:#fff;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px;flex-wrap:wrap}
+.demo a{color:#fff;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
+.real{background:#eef6f9;border:1px solid #b9d6e2;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:14px}
+.real b{display:block;font-size:15px;margin-bottom:4px}
+.hidden{display:none !important}
+</style></head><body>
+<div class="demo"><span><b>DEMO</b> · real asset ID, sample service data</span><a href="../">About the demo</a></div>
+<header><div class="w"><img src="../assets/logo.png" alt="AVS — Trust on Quality" width="113" height="48" style="display:block;height:48px;width:auto"><div class="co"><b>AVS Security Systems LLC</b><span>Asset service record</span></div></div></header>
+<main class="w" id="app"></main>
+<footer>Badar &amp; Mohammad Bldg, WH-13A, St 3, Al Qusais, Dubai · avssgroup.com</footer>
+<script>
+(() => {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  // Two link forms: short "#<equipment-id>" (simple QR) or "#g=<id>&a=<asset ID>&n=<name>".
+  const KNOWN = { '84911992-8066-4d37-995e-dbbf576f6942': ['AVS/DXB/SD/101', 'Reception Area'] };
+  const h = location.hash.slice(1);
+  const p = new URLSearchParams(h.includes('=') ? h : '');
+  let guid = (p.get('g') || (h.includes('=') ? '' : h)).toLowerCase();
+  // Demo: any scan shows the sample page. An unknown or missing code falls back to the sample asset.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(guid)) guid = '84911992-8066-4d37-995e-dbbf576f6942';
+  const known = KNOWN[guid] || [];
+  const asset = p.get('a') || known[0] || '', name = p.get('n') || known[1] || '';
+  const app = document.getElementById('app');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(guid)) {
+    app.innerHTML = '<div class="card"><h1>Label not recognised</h1><p class="muted" style="font-size:15px">This QR code does not point to an AVS asset. Please call us and quote the asset ID printed on the label.</p></div>';
+    return;
+  }
+  // Sample service data, the same for every demo asset. Dates are relative to today.
+  const day = 864e5, now = Date.now();
+  const at = (daysAgo, h, m) => { const d = new Date(now - daysAgo * day); d.setHours(h, m, 0, 0); return d; };
+  const visits = [[at(40, 9, 15), at(40, 10, 20), 'Technician A', 5012], [at(131, 12, 0), at(131, 13, 5), 'Technician B', 4630], [at(222, 11, 30), at(222, 12, 25), 'Technician A', 4211]];
+  const next = new Date(now + 50 * day);
+  const fd = d => d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  const ft = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+  const dur = (a, b) => { const m = Math.round((b - a) / 6e4); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`; };
+  // Contacts: the ones saved on the admin demo page (group of the demo site), else samples.
+  let c = { engineer: 'Sample Engineer', engineerPhone: '050 000 0001', technician: 'Sample Technician', technicianPhone: '050 000 0002' };
+  try {
+    const st = JSON.parse(localStorage.getItem('avs-demo-contacts-v2'));
+    if (st) { const own = (st.sites || {})['55'] || {}, g = (own.group && (st.groups || {})[own.group]) || {}, d = st.default || {};
+      c = {}; for (const k of ['engineer', 'engineerPhone', 'technician', 'technicianPhone']) c[k] = own[k] || g[k] || d[k] || ''; }
+  } catch {}
+  const wa = raw => { let d = String(raw).replace(/[^\d+]/g, '');
+    if (d.startsWith('+')) d = d.slice(1); else if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '971' + d.slice(1); else if (!d.startsWith('971') && d.length <= 9) d = '971' + d;
+    return d.length >= 8 ? d : ''; };
+  const btns = v => { const n = wa(v); return n ? `<div class="btns"><a class="btn" href="tel:+${n}">Call</a><a class="btn wa" href="https://wa.me/${n}?text=${encodeURIComponent('Hello AVS, regarding asset ' + (asset || ''))}" rel="noopener noreferrer">WhatsApp</a></div>` : ''; };
+  const row = (label, v, phone) => v ? `<div class="row"><div class="n">${label}</div><div class="v">${esc(v)}</div>${phone ? btns(v) : ''}</div>` : '';
+  const real = `https://avss.synchroteam.com/app/Equipments/PublicEquipment/${guid}`;
+  document.title = `${asset || 'Asset'} · AVS (demo)`;
+  app.innerHTML = `
+<div class="card">
+  <h1>${esc(name || 'Equipment')}</h1>
+  <p class="id">Asset ID <b>${esc(asset || '—')}</b></p>
+  <span class="badge ok">✓ PPM up to date</span>
+  <dl style="margin-top:14px">
+    <dt>Site</dt><dd>Sample site (demo)</dd>
+    <dt>Next PPM</dt><dd>${fd(next)}</dd>
+  </dl>
+</div>
+<div class="card">
+  <h2>Last PPM</h2>
+  <dl><dt>Date</dt><dd>${fd(visits[0][1])}</dd><dt>Time</dt><dd>${ft(visits[0][0])} – ${ft(visits[0][1])} <span class="muted">(${dur(visits[0][0], visits[0][1])})</span></dd>
+  <dt>Done by</dt><dd>${visits[0][2]}</dd><dt>Job no.</dt><dd>${visits[0][3]}</dd></dl>
+</div>
+<div class="card"><h2>Details &amp; contacts</h2>
+  ${row('Cluster Engineer', c.engineer)}${row('Cluster Engineer Phone', c.engineerPhone, 1)}${row('Technician', c.technician)}${row('Technician Phone', c.technicianPhone, 1)}
+</div>
+<div class="card"><h2>PPM history</h2><ul>${visits.map(v => `<li><div class="d">${fd(v[1])}</div><div class="s">${ft(v[0])} – ${ft(v[1])} · ${v[2]} · Job ${v[3]}</div></li>`).join('')}</ul></div>
+<div class="real"><b>Demo check: this tag is linked to a real Synchroteam asset</b>The service data above is sample data. The live system shows this asset's real PPM visits. Open the real record to confirm the tag points to the right equipment.
+  <div class="btns"><a class="btn" href="${real}" rel="noopener noreferrer">Open in Synchroteam</a></div></div>
+<div class="card"><h2>AVS office</h2><a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a><p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>`;
+})();
+addEventListener('hashchange', () => location.reload());
+</script>
+</body></html>

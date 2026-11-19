@@ -50,6 +50,19 @@ button.go:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .creds{font-size:14px;margin-top:12px}.creds table{width:100%;border-collapse:collapse;margin-top:6px}
 .creds td,.creds th{text-align:left;padding:6px 4px;border-top:1px solid var(--line);font-size:14px}
 .creds code{font-size:14px;background:#eef2f5;padding:1px 5px;border-radius:4px}
+.rp select,.rp textarea,.rp input[type=text],.rp input[type=tel]{width:100%;min-height:48px;padding:10px 12px;font-size:16px;border:1.5px solid #9aa9b5;border-radius:8px;color:var(--ink);font-family:inherit;background:#fff}
+.rp textarea{min-height:110px;resize:vertical}
+.rp label{display:block;font-size:14px;font-weight:600;margin:14px 0 4px}
+.rp select:focus,.rp textarea:focus,.rp input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--primary)}
+.seg{display:flex;gap:8px}.seg label{flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;border:1.5px solid #9aa9b5;border-radius:8px;font-size:15px;cursor:pointer}
+.seg input{width:18px;height:18px}.seg label:has(input:checked){border-color:var(--primary);background:#eef6f9;color:var(--primary)}
+button.rpbtn{width:100%;min-height:48px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;border:2px solid #b45309;background:#fff7ed;color:#9a3412}
+button.rpbtn:focus-visible,button.sec:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);font-weight:700;font-size:15px;cursor:pointer}
+.thumb{margin-top:8px;max-width:140px;border-radius:8px;border:1px solid var(--line);display:block}
+.okbox{background:#e7f4ec;border:1px solid #a7d7b8;border-radius:10px;padding:14px;color:#14532d}
+.okbox b{display:block;font-size:17px;margin-bottom:4px}
+.st{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;background:#fdf1e2;color:var(--warn)}
 .who{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);margin-bottom:12px;flex-wrap:wrap}
 .who button{min-height:44px;padding:6px 14px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
 </style></head><body>
@@ -168,6 +181,26 @@ button.go:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     <dt>Next PPM</dt><dd>${fd(next)}</dd>
   </dl>
 </div>
+<div class="card" id="rpcard"><h2>Problem with this asset?</h2>
+  <div id="rpbox"><button type="button" class="rpbtn" id="rpopen">⚠ Report a problem</button>
+  <p class="muted" style="margin-top:8px">AVS gets it right away as a job. No call needed.</p></div>
+  <form id="rpform" class="rp hidden" novalidate>
+    <label for="rpt">What is wrong?</label>
+    <select id="rpt" required><option value="">Choose one</option><option>Not working</option><option>Working, but faulty</option><option>Damaged</option><option>Strange noise</option><option>Other</option></select>
+    <label id="rpul">How urgent?</label>
+    <div class="seg" role="radiogroup" aria-labelledby="rpul"><label><input type="radio" name="rpu" value="Normal" checked> Normal</label><label><input type="radio" name="rpu" value="Urgent"> Urgent</label></div>
+    <label for="rpd">Describe the problem</label>
+    <textarea id="rpd" placeholder="Example: door does not open when someone walks up" required></textarea>
+    <label for="rpp">Photo (optional)</label>
+    <input id="rpp" type="file" accept="image/*" capture="environment" style="font-size:15px;min-height:44px">
+    <img id="rpthumb" class="thumb hidden" alt="Selected photo">
+    <label for="rpn">Your name</label><input id="rpn" type="text" autocomplete="name" value="${esc(user.name)}">
+    <label for="rpm">Your phone</label><input id="rpm" type="tel" autocomplete="tel" placeholder="05x xxx xxxx">
+    <div id="rperr" class="err hidden" role="alert"></div>
+    <div class="btns" style="margin-top:14px"><button class="go" type="submit" style="margin:0;flex:1">Send to AVS</button><button type="button" class="sec" id="rpcancel">Cancel</button></div>
+  </form>
+  <div id="rplist"></div>
+</div>
 <div class="card">
   <h2>Last PPM</h2>
   <dl><dt>Date</dt><dd>${fd(visits[0][1])}</dd><dt>Time</dt><dd>${ft(visits[0][0])} – ${ft(visits[0][1])} <span class="muted">(${dur(visits[0][0], visits[0][1])})</span></dd>
@@ -180,6 +213,41 @@ button.go:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 <div class="card"><h2>AVS office</h2><a class="btn primary" href="tel:+97142717143">Call AVS: 04-2717143</a><p class="muted" style="margin-top:8px">Please quote the asset ID shown above.</p></div>`;
   document.getElementById('lo').addEventListener('click', logout);
+
+  // ---- Report a problem (demo) -----------------------------------------
+  // Real version: the form posts to the AVS server; the server checks the
+  // login, then creates the job in Synchroteam by API (customer, site and
+  // equipment filled in) and returns the Synchroteam job number.
+  const RKEY = 'avs-demo-requests-v1';
+  const loadR = () => { try { return JSON.parse(localStorage.getItem(RKEY)) || []; } catch { return []; } };
+  const saveR = a => { try { localStorage.setItem(RKEY, JSON.stringify(a)); } catch {} };
+  const $ = id => document.getElementById(id);
+  const fdt = d => new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+  const showList = () => {
+    const mine = loadR().filter(r => r.asset === asset);
+    $('rplist').innerHTML = mine.length ? `<h2 style="margin-top:16px">Open requests</h2><ul>${mine.map(r => `<li><div class="d">Job ${esc(r.job)} · ${esc(r.type)}${r.urgent ? ' · <span style="color:#9b1c1c">Urgent</span>' : ''}</div><div class="s">${fdt(r.at)} · by ${esc(r.by)} · <span class="st">Received</span></div></li>`).join('')}</ul>` : '';
+  };
+  showList();
+  const openF = on => { $('rpform').classList.toggle('hidden', !on); $('rpbox').classList.toggle('hidden', on); if (on) $('rpt').focus(); else $('rpopen').focus(); };
+  $('rpopen').addEventListener('click', () => { const ok = $('rpcard').querySelector('.okbox'); if (ok) ok.remove(); openF(true); });
+  $('rpcancel').addEventListener('click', () => openF(false));
+  $('rpp').addEventListener('change', e => { const f = e.target.files[0], t = $('rpthumb');
+    if (f) { t.src = URL.createObjectURL(f); t.classList.remove('hidden'); } else t.classList.add('hidden'); });
+  $('rpform').addEventListener('submit', e => {
+    e.preventDefault();
+    const type = $('rpt').value, desc = $('rpd').value.trim(), err = $('rperr');
+    const miss = !type ? ['rpt', 'Choose what is wrong.'] : !desc ? ['rpd', 'Describe the problem in a few words.'] : null;
+    if (miss) { err.textContent = miss[1]; err.classList.remove('hidden'); $(miss[0]).focus(); return; }
+    err.classList.add('hidden');
+    const urgent = document.querySelector('input[name=rpu]:checked').value === 'Urgent';
+    const job = String(5100 + Math.floor(Math.random() * 900));
+    const all = loadR(); all.unshift({ asset, job, type, urgent, desc, by: $('rpn').value.trim() || user.name, at: Date.now() }); saveR(all);
+    $('rpform').reset(); $('rpn').value = user.name; $('rpthumb').classList.add('hidden');
+    $('rpform').classList.add('hidden'); $('rpbox').classList.remove('hidden');
+    const ok = document.createElement('div'); ok.className = 'okbox'; ok.setAttribute('role', 'status'); ok.tabIndex = -1; ok.style.marginTop = '12px';
+    ok.innerHTML = `<b>✓ Sent to AVS · Job ${job}</b>${esc(type)}${urgent ? ' (urgent)' : ''} for ${esc(asset)}. The AVS team has it now${urgent ? ' and will call you soon' : ''}. Demo: no real job is made.`;
+    $('rpbox').after(ok); ok.focus(); showList();
+  });
 })();
 addEventListener('hashchange', () => location.reload());
 </script>

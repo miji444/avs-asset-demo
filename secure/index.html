@@ -242,10 +242,14 @@ button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid
     const urgent = document.querySelector('input[name=rpu]:checked').value === 'Urgent';
     const job = String(5100 + Math.floor(Math.random() * 900));
     const all = loadR(); all.unshift({ asset, job, type, urgent, desc, by: $('rpn').value.trim() || user.name, at: Date.now() }); saveR(all);
+    const ok = document.createElement('div'); ok.className = 'okbox'; ok.setAttribute('role', 'status'); ok.tabIndex = -1; ok.style.marginTop = '12px';
+    const by = $('rpn').value.trim() || user.name;
+    const msg = `${urgent ? '🔴 URGENT call-out' : 'Call-out'} · Job ${job}\n${asset} · ${name}\n${SITE_OWNER} · Sample site\nProblem: ${type}. ${desc}\nBy: ${by}`;
+    const en = wa(c.engineerPhone || '');
+    const waBtn = en ? `<a class="btn wa" style="width:100%;margin-top:12px;background:#0b7a3e;color:#fff;border-color:#0b7a3e" href="https://wa.me/${en}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener noreferrer">Also tell ${esc(c.engineer || 'the engineer')} on WhatsApp</a><p class="muted" style="margin-top:6px;font-size:13px">Opens your WhatsApp with the message ready. Just press send.</p>` : '';
+    ok.innerHTML = `<b>✓ Sent to AVS · Job ${job}</b>${esc(type)}${urgent ? ' (urgent)' : ''} for ${esc(asset)}. The AVS team has it now${urgent ? ' and will call you soon' : ''}. Demo: no real job is made.${waBtn}`;
     $('rpform').reset(); $('rpn').value = user.name; $('rpthumb').classList.add('hidden');
     $('rpform').classList.add('hidden'); $('rpbox').classList.remove('hidden');
-    const ok = document.createElement('div'); ok.className = 'okbox'; ok.setAttribute('role', 'status'); ok.tabIndex = -1; ok.style.marginTop = '12px';
-    ok.innerHTML = `<b>✓ Sent to AVS · Job ${job}</b>${esc(type)}${urgent ? ' (urgent)' : ''} for ${esc(asset)}. The AVS team has it now${urgent ? ' and will call you soon' : ''}. Demo: no real job is made.`;
     $('rpbox').after(ok); ok.focus(); showList();
   });
 })();

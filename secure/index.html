@@ -56,8 +56,8 @@ button.go:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .rp select:focus,.rp textarea:focus,.rp input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--primary)}
 .seg{display:flex;gap:8px}.seg label{flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;border:1.5px solid #9aa9b5;border-radius:8px;font-size:15px;cursor:pointer}
 .seg input{width:18px;height:18px}.seg label:has(input:checked){border-color:var(--primary);background:#eef6f9;color:var(--primary)}
-button.rpbtn{width:100%;min-height:48px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;border:2px solid #b45309;background:#fff7ed;color:#9a3412}
-button.rpbtn:focus-visible,button.sec:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.rpbtn,a.rpbtn{display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box;width:100%;min-height:48px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;border:2px solid #b45309;background:#fff7ed;color:#9a3412}
+button.rpbtn:focus-visible,a.rpbtn:focus-visible,button.sec:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);font-weight:700;font-size:15px;cursor:pointer}
 .thumb{margin-top:8px;max-width:140px;border-radius:8px;border:1px solid var(--line);display:block}
 .okbox{background:#e7f4ec;border:1px solid #a7d7b8;border-radius:10px;padding:14px;color:#14532d}
@@ -84,6 +84,12 @@ button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid
   const known = KNOWN[guid] || [];
   const asset = p.get('a') || known[0] || '', name = p.get('n') || known[1] || '';
   const app = document.getElementById('app');
+  // Version 1 (default): "Report a problem" opens the AVS form, which creates the job.
+  // Version 2 (?v=2): "Report a problem" opens the asset's Synchroteam page instead.
+  const V2 = new URLSearchParams(location.search).get('v') === '2';
+  const SYNCHRO = 'https://avss.synchroteam.com/app/Equipments/PublicEquipment/' + guid;
+  const demoBar = document.querySelector('.demo span');
+  if (demoBar) demoBar.innerHTML = `<b>DEMO · Version ${V2 ? '2' : '1'}</b> · ${V2 ? 'report via Synchroteam' : 'report form on AVS page'}`;
 
   // ---- Login gate (demo) ------------------------------------------------
   // DEMO ONLY: accounts sit in this page so it works on GitHub Pages.
@@ -182,8 +188,11 @@ button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid
   </dl>
 </div>
 <div class="card" id="rpcard"><h2>Problem with this asset?</h2>
-  <div id="rpbox"><button type="button" class="rpbtn" id="rpopen">⚠ Report a problem</button>
-  <p class="muted" style="margin-top:8px">AVS gets it right away as a job. No call needed.</p></div>
+  <div id="rpbox">${V2
+    ? `<a class="rpbtn" href="${SYNCHRO}" target="_blank" rel="noopener noreferrer">⚠ Report a problem</a>
+  <p class="muted" style="margin-top:8px">Opens the AVS service page in Synchroteam to log your call-out.</p>`
+    : `<button type="button" class="rpbtn" id="rpopen">⚠ Report a problem</button>
+  <p class="muted" style="margin-top:8px">AVS gets it right away as a job. No call needed.</p>`}</div>
   <form id="rpform" class="rp hidden" novalidate>
     <label for="rpt">What is wrong?</label>
     <select id="rpt" required><option value="">Choose one</option><option>Not working</option><option>Working, but faulty</option><option>Damaged</option><option>Strange noise</option><option>Other</option></select>
@@ -228,6 +237,7 @@ button.sec{min-height:48px;padding:8px 16px;border-radius:8px;border:1.5px solid
     $('rplist').innerHTML = mine.length ? `<h2 style="margin-top:16px">Open requests</h2><ul>${mine.map(r => `<li><div class="d">Job ${esc(r.job)} · ${esc(r.type)}${r.urgent ? ' · <span style="color:#9b1c1c">Urgent</span>' : ''}</div><div class="s">${fdt(r.at)} · by ${esc(r.by)} · <span class="st">Received</span></div></li>`).join('')}</ul>` : '';
   };
   showList();
+  if (V2) return;
   const openF = on => { $('rpform').classList.toggle('hidden', !on); $('rpbox').classList.toggle('hidden', on); if (on) $('rpt').focus(); else $('rpopen').focus(); };
   $('rpopen').addEventListener('click', () => { const ok = $('rpcard').querySelector('.okbox'); if (ok) ok.remove(); openF(true); });
   $('rpcancel').addEventListener('click', () => openF(false));
